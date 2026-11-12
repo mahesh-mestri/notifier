@@ -1,9 +1,8 @@
-import { View, Text } from 'react-native'
-import React, { Children } from 'react'
+import React, { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { store } from '../store/store'
 
-export default function StoreProvider({ children }: { children: React.ReactNode }) {
+export default function StoreProvider({ children }: PropsWithChildren) {
   return (
     <Provider store={store}>
       {children}
