@@ -1,14 +1,22 @@
-import { View, Text } from 'react-native'
-import React, { PropsWithChildren } from 'react'
-import { NavigationContainer } from '@react-navigation/native'
+import React, { PropsWithChildren } from 'react';
+import { Text, useColorScheme } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { lightTheme, darkTheme } from '../utils/theme';
 
-export default function NavigationProvider({children}: PropsWithChildren) {
+export default function NavigationProvider({
+    children,
+}: PropsWithChildren) {
+    const colorScheme = useColorScheme();
+
+    const activeTheme =
+        colorScheme === 'dark' ? darkTheme : lightTheme;
+
     return (
         <NavigationContainer
-            // linking={linking}
+            theme={activeTheme}
             fallback={<Text>Loading navigation...</Text>}
         >
             {children}
         </NavigationContainer>
-    )
+    );
 }

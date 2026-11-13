@@ -1,5 +1,6 @@
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // Authentication & onboarding
 export type AuthStackParamList = {
@@ -52,3 +53,5 @@ export type RootStackParamList = {
   AuthStack: NavigatorScreenParams<AuthStackParamList>;
   AppStack: NavigatorScreenParams<AppStackParamList>;
 };
+
+export type AuthProps = NativeStackScreenProps<AuthStackParamList, 'Signin'>;

@@ -1,31 +1,45 @@
 
 import React, { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import {
+  StyleSheet,
+  View,
+  Text,
+} from 'react-native';
+
+import { useTheme } from '@react-navigation/native';
 
 function RemindersOnTime() {
-  const theme = useTheme();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
+    >
       <View
         style={[
           styles.illustration,
-          { backgroundColor: theme.colors.surfaceVariant },
+          { backgroundColor: colors.card },
         ]}
       >
         <Text style={styles.emoji}>🗓️</Text>
       </View>
 
-      <Text variant="headlineMedium" style={styles.title}>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.text },
+        ]}
+      >
         Reminders at the right time.
       </Text>
 
       <Text
-        variant="bodyLarge"
         style={[
           styles.description,
-          { color: theme.colors.onSurfaceVariant },
+          { color: colors.text, opacity: 0.7 },
         ]}
       >
         Set reminders for important moments and let
@@ -54,11 +68,13 @@ const styles = StyleSheet.create({
     fontSize: 100,
   },
   title: {
+    fontSize: 28,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 14,
   },
   description: {
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 27,
   },

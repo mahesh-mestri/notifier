@@ -21,7 +21,7 @@ function AuthStack() {
       <Stack.Screen
         name="Signin"
         component={Signin}
-        options={commonScreenOptions}
+        options={hiddenHeaderOptions}
       />
 
       <Stack.Screen

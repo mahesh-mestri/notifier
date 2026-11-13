@@ -4,19 +4,21 @@ import {
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Pressable,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Text, useTheme } from 'react-native-paper';
+import { useTheme } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
 import { AuthStackParamList } from '../navigation/types/navigation.types';
 import NeverMissThing from '../components/onboarding/NeverMissThing';
 import RemindersOnTime from '../components/onboarding/RemindersOnTime';
 import StayOrganized from '../components/onboarding/StayOrganized';
-
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Onboarding'>;
 
@@ -27,7 +29,7 @@ const slides = [
 ];
 
 function Onboarding({ navigation }: Props) {
-  const theme = useTheme();
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
 
   const flatListRef = useRef<FlatList>(null);
@@ -47,7 +49,9 @@ function Onboarding({ navigation }: Props) {
     });
   };
 
-  const handleSkip = () => navigation.replace('Signin');
+  const handleSkip = () => {
+    navigation.replace('Signin');
+  };
 
   const handleScroll = (
     event: NativeSyntheticEvent<NativeScrollEvent>,
@@ -63,27 +67,45 @@ function Onboarding({ navigation }: Props) {
     <SafeAreaView
       style={[
         styles.container,
-        { backgroundColor: theme.colors.background },
+        { backgroundColor: colors.background },
       ]}
     >
+      {/* Header */}
       <View style={styles.header}>
-        <Text variant="titleMedium" style={styles.logo}>
+        <Text
+          style={[
+            styles.logo,
+            { color: colors.primary },
+          ]}
+        >
           Notifier
         </Text>
 
         {!isLastSlide && (
-          <Button mode="text" onPress={handleSkip} compact>
-            Skip
-          </Button>
+          <Pressable
+            onPress={handleSkip}
+            hitSlop={10}
+            style={styles.skipButton}
+          >
+            <Text
+              style={[
+                styles.skipText,
+                { color: colors.primary },
+              ]}
+            >
+              Skip
+            </Text>
+          </Pressable>
         )}
       </View>
 
+      {/* Onboarding Slides */}
       <FlatList
-        scrollEnabled={false}
         ref={flatListRef}
         data={slides}
         horizontal
         pagingEnabled
+        scrollEnabled={false}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
         onMomentumScrollEnd={handleScroll}
@@ -99,34 +121,50 @@ function Onboarding({ navigation }: Props) {
         }}
       />
 
+      {/* Footer */}
       <View style={styles.footer}>
+        {/* Pagination */}
         <View style={styles.pagination}>
-          {slides.map((slide, index) => (
-            <View
-              key={slide.id}
-              style={[
-                styles.dot,
-                {
-                  width: currentIndex === index ? 24 : 9,
-                  backgroundColor:
-                    currentIndex === index
-                      ? '#007AFF'
-                      : theme.colors.surfaceVariant,
-                },
-              ]}
-            />
-          ))}
+          {slides.map((slide, index) => {
+            const isActive = currentIndex === index;
+
+            return (
+              <View
+                key={slide.id}
+                style={[
+                  styles.dot,
+                  {
+                    width: isActive ? 24 : 9,
+                    backgroundColor: isActive
+                      ? colors.primary
+                      : colors.border,
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
 
-        <Button
-          mode="contained"
+        {/* Continue Button */}
+        <Pressable
           onPress={handleNext}
-          buttonColor="#007AFF"
-          style={styles.button}
-          contentStyle={styles.buttonContent}
+          style={({ pressed }) => [
+            styles.button,
+            {
+              backgroundColor: colors.primary,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
         >
-          {isLastSlide ? 'Get Started' : 'Continue'}
-        </Button>
+          <Text
+            style={[
+              styles.buttonText,
+              { color: '#FFFFFF' },
+            ]}
+          >
+            {isLastSlide ? 'Get Started' : 'Continue'}
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -144,8 +182,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   logo: {
-    color: '#007AFF',
+    fontSize: 20,
     fontWeight: '700',
+  },
+  skipButton: {
+    padding: 8,
+  },
+  skipText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   footer: {
     paddingHorizontal: 24,
@@ -163,10 +208,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   button: {
-    borderRadius: 16,
-  },
-  buttonContent: {
     height: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

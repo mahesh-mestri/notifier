@@ -1,28 +1,42 @@
 
 import React, { memo } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useTheme } from '@react-navigation/native';
 
 function NeverMissThing() {
-  const theme = useTheme();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
+    >
       <Image
         source={require('../../assets/onboard/welcome.png')}
         style={styles.illustration}
         resizeMode="contain"
       />
 
-      <Text variant="headlineMedium" style={styles.title}>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.text },
+        ]}
+      >
         Never miss a thing.
       </Text>
 
       <Text
-        variant="bodyLarge"
         style={[
           styles.description,
-          { color: theme.colors.onSurfaceVariant },
+          { color: colors.text },
         ]}
       >
         Keep your important tasks, plans, and reminders
@@ -45,13 +59,16 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   title: {
+    fontSize: 28,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 14,
   },
   description: {
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 27,
+    opacity: 0.75,
   },
 });
 
