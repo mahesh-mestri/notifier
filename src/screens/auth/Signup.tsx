@@ -84,7 +84,6 @@ function Signup({ navigation }: Props) {
   };
 
   return (
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
