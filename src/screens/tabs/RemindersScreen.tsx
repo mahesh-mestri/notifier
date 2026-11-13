@@ -22,6 +22,7 @@ import ReminderFilter, {
 } from '../../components/reminders/ReminderFilter';
 import ReminderSearch from '../../components/reminders/ReminderSearch';
 import ReminderItem from '../../components/reminders/ReminderItem.tsx';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function RemindersScreen({ navigation }: any) {
@@ -80,6 +81,7 @@ export default function RemindersScreen({ navigation }: any) {
   }, [filter, search]);
 
   return (
+    <SafeAreaView edges={['bottom']} style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredReminders}
         keyExtractor={item => item.id}
@@ -141,10 +143,14 @@ export default function RemindersScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior='always'
       />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   content: {
     padding: 12,
     paddingBottom: 32,

@@ -50,12 +50,13 @@ export default function CategoriesScreen({ navigation }: any) {
   };
 
   return (
+    <SafeAreaView edges={['bottom']} style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredCategories}
         keyExtractor={item => item.id}
         numColumns={2}
         columnWrapperStyle={styles.column}
-        contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}
+        contentContainerStyle={[styles.content]}
         renderItem={({ item }) => (
           <CategoryCard
             category={item}
@@ -110,6 +111,7 @@ export default function CategoriesScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior='always'
       />
+      </SafeAreaView>
   );
 }
 
