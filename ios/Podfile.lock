@@ -1372,6 +1372,55 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-bottom-tabs (1.5.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - react-native-bottom-tabs/common (= 1.5.0)
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - SwiftUIIntrospect (~> 1.0)
+    - Yoga
+  - react-native-bottom-tabs/common (1.5.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - SwiftUIIntrospect (~> 1.0)
+    - Yoga
   - react-native-safe-area-context (5.11.1):
     - hermes-engine
     - RCTRequired
@@ -1861,6 +1910,29 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets (>= 0.8.0)
     - Yoga
+  - RNKeychain (11.0.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNReanimated (4.7.1):
     - hermes-engine
     - RCTRequired
@@ -2089,6 +2161,7 @@ PODS:
     - Yoga
   - SocketRocket (0.7.1):
     - ReactNativeDependencies
+  - SwiftUIIntrospect (1.3.0)
   - Yoga (0.0.0):
     - React-Core-prebuilt
 
@@ -2142,6 +2215,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - React-mutationobservernativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver`)
+  - react-native-bottom-tabs (from `../node_modules/react-native-bottom-tabs`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-vector-icons-material-design-icons (from `../node_modules/@react-native-vector-icons/material-design-icons`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2182,11 +2256,16 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (from `build/rndeps-facades/SocketRocket`)
   - Yoga (from `build/rncore-facades/Yoga`)
+
+SPEC REPOS:
+  trunk:
+    - SwiftUIIntrospect
 
 EXTERNAL SOURCES:
   boost:
@@ -2286,6 +2365,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   React-mutationobservernativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver"
+  react-native-bottom-tabs:
+    :path: "../node_modules/react-native-bottom-tabs"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-vector-icons-material-design-icons:
@@ -2366,6 +2447,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNKeychain:
+    :path: "../node_modules/react-native-keychain"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -2396,7 +2479,7 @@ SPEC CHECKSUMS:
   React-bridging: 0e1c697882aa7ce4bb2ef414a8ea4e912345f1b1
   React-callinvoker: 849a495318bab76cb6b391bebaf0d66e40e916e1
   React-Core: 29bee4599038799596311247209b0d44352db311
-  React-Core-prebuilt: 6d54f52ab5491f5c294aceb9615ec97ad179415c
+  React-Core-prebuilt: dbd0bf94bbe1a1714bd4e27bc4f1bf33c02bb7b3
   React-CoreModules: f7f7b0ac1a514b62d16786922b288d70885fcd88
   React-cxxreact: b7fda6d3fbf65c268189db094c926603b3d63ad0
   React-cxxstableapi: 7019410c5d74d0a60cae97b5a636cd42017370a3
@@ -2426,6 +2509,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: e4505b37aee54da1ba7ecba6b29481d33d42f84f
   React-microtasksnativemodule: 6c601251d281bad8babd1cdbf8ed87e7300da711
   React-mutationobservernativemodule: f2011b103c51b040b871f9b6cdc1cd1ac4984ce4
+  react-native-bottom-tabs: 060e4a7419549af783ef578862d98b03ef6f3743
   react-native-safe-area-context: f0a72873520949c9284ae231bc5237ad5bf38c1a
   react-native-vector-icons-material-design-icons: 811f6c4447a60d8a66394644093dcffdc546772f
   React-NativeModulesApple: 928f694d81d073721cbad4edab22cf0319a02607
@@ -2466,10 +2550,12 @@ SPEC CHECKSUMS:
   ReactCommon: b815fa26d04751d8b1a076de6888634fb34fb44e
   ReactNativeDependencies: a5164c3ebbe90d992022b5d9cbabbf770a6d7d05
   RNGestureHandler: 549d09174d25167ecf0a3bde85660b17cc5291df
+  RNKeychain: a9fe626cf60f67d3d7ce9458340a7adf0728004e
   RNReanimated: 02d6b0d54a0d4e9e02659f19be971935a371d12d
   RNScreens: 67fd45f1f30aa2849ab847156c133bd592a26533
   RNWorklets: 23dd840ca444b9e0e5ae5f6964b16ef39253ccb2
   SocketRocket: d57b1af80c029e12a75cd9b218287c67381e4593
+  SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
   Yoga: 58b502c52b14ad3c4468805d461fc37d275c2a42
 
 PODFILE CHECKSUM: 4f0ef52e1e3ef0d4a65b7537b0478bc67fec2616
