@@ -18,13 +18,14 @@ import UpcomingReminders from '../../components/home/UpcomingReminders';
 import CategorySection from '../../components/home/CategorySection';
 import { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
 import { AppStackParamList, BottomTabParamList } from '../../navigation/types/navigation.types';
+import Button from '../../components/ui/Button';
 
 type Props = NativeBottomTabScreenProps<BottomTabParamList, 'Home'>;
 
 function HomeScreen({ navigation }: Props) {
   const { colors } = useTheme();
 
-  const parentNavigation =
+  const nav =
     navigation.getParent<NativeStackNavigationProp<AppStackParamList>>();
 
   const todayReminders = useMemo(() => {
@@ -73,7 +74,7 @@ function HomeScreen({ navigation }: Props) {
         reminders={todayReminders}
         onSeeAll={() => navigation.navigate('Reminders')}
         onReminderPress={reminder =>
-          parentNavigation?.navigate('ReminderDetails', {
+          nav?.navigate('ReminderDetails', {
             reminderId: reminder.id,
           })
         }
@@ -90,12 +91,12 @@ function HomeScreen({ navigation }: Props) {
           styles.createButton,
           { backgroundColor: colors.primary },
         ]}
-        onPress={() => parentNavigation?.navigate('CreateReminder')}
+        onPress={() => nav?.navigate('CreateReminder')}
       >
         <Text style={styles.createButtonText}>
           + Create Reminder
         </Text>
-      </Pressable>
+      </Pressable> 
     </ScrollView>
   );
 }
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: 12,
     paddingBottom: 32,
     gap: 22,
   },
