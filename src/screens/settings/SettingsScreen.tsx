@@ -154,12 +154,12 @@ export default function SettingsScreen({ navigation }: any) {
       contentInsetAdjustmentBehavior='always'
     >
       {/* Appearance */}
-      <SettingsSection
+      {/* <SettingsSection
         title="Appearance"
         subtitle="Customize how Notifier looks"
       >
         <ThemeSelector />
-      </SettingsSection>
+      </SettingsSection> */}
 
       {/* Notifications */}
       <SettingsSection
