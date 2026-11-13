@@ -13,13 +13,11 @@ const Tab = createNativeBottomTabNavigator<BottomTabParamList>();
 export default function BottomTabNavigator() {
   return (
     <Tab.Navigator
-      hapticFeedbackEnabled
       sidebarAdaptable
       labeled={false}
       scrollEdgeAppearance='transparent'
       tabBarInactiveTintColor='#9CA3AF'
       tabBarActiveTintColor="#2563EB"
-      translucent={true}
     >
       <Tab.Screen
         name="Home"
