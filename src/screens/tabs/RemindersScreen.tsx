@@ -94,7 +94,7 @@ export default function RemindersScreen({ navigation }: any) {
           />
         )}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -145,9 +145,6 @@ export default function RemindersScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   content: {
     padding: 12,
     paddingBottom: 32,

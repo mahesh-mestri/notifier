@@ -23,6 +23,7 @@ import { mockReminders } from '../../data/mockReminders';
 import CategoryCard from '../../components/categories/CategoryCard';
 import CategorySearch from '../../components/categories/CategorySearch';
 import CategorySummary from '../../components/categories/CategorySummary';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function CategoriesScreen({ navigation }: any) {
@@ -54,7 +55,7 @@ export default function CategoriesScreen({ navigation }: any) {
         keyExtractor={item => item.id}
         numColumns={2}
         columnWrapperStyle={styles.column}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { backgroundColor: colors.background }]}
         renderItem={({ item }) => (
           <CategoryCard
             category={item}

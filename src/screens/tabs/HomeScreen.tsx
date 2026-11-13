@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -10,21 +10,18 @@ import {
 import { useTheme } from '@react-navigation/native';
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-
 import { mockReminders, mockCategories } from '../../data/mockReminders';
 import HomeHeader from '../../components/home/HomeHeader';
 import DailyProgressCard from '../../components/home/DailyProgressCard';
 import ReminderSummary from '../../components/home/ReminderSummary';
 import UpcomingReminders from '../../components/home/UpcomingReminders';
 import CategorySection from '../../components/home/CategorySection';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
 import { AppStackParamList, BottomTabParamList } from '../../navigation/types/navigation.types';
 
 type Props = NativeBottomTabScreenProps<BottomTabParamList, 'Home'>;
 
-export default function HomeScreen({ navigation }: Props) {
+function HomeScreen({ navigation }: Props) {
   const { colors } = useTheme();
 
   const parentNavigation =
@@ -55,6 +52,10 @@ export default function HomeScreen({ navigation }: Props) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior='always'
+      style={[
+        styles.screen,
+        { backgroundColor: colors.background },
+      ]}
     >
       <HomeHeader />
 
@@ -98,6 +99,8 @@ export default function HomeScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
+
+export default memo(HomeScreen);
 
 const styles = StyleSheet.create({
   screen: {
