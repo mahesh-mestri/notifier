@@ -1,8 +1,9 @@
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
 
-// Authentication & onboarding
+// Authentication
 export type AuthStackParamList = {
   Onboarding: undefined;
   Signin: undefined;
@@ -13,7 +14,7 @@ export type AuthStackParamList = {
   };
 };
 
-// Main application tabs
+// Bottom Tabs
 export type BottomTabParamList = {
   Home: undefined;
   Reminders: undefined;
@@ -21,9 +22,9 @@ export type BottomTabParamList = {
   Profile: undefined;
 };
 
-// Authenticated application screens
+// App Stack
 export type AppStackParamList = {
-  MainTabs: NavigatorScreenParams<BottomTabParamList>;
+  BottomTabNavigator: NavigatorScreenParams<BottomTabParamList>;
 
   CreateReminder: undefined;
   EditReminder: {
@@ -38,7 +39,7 @@ export type AppStackParamList = {
   CompletedReminders: undefined;
 };
 
-// Optional modal navigation
+// Modal Stack
 export type ReminderModalParamList = {
   ReminderPopup: {
     reminderId: string;
@@ -48,22 +49,38 @@ export type ReminderModalParamList = {
   };
 };
 
-// Root navigation
+// Root Stack
 export type RootStackParamList = {
   AuthStack: NavigatorScreenParams<AuthStackParamList>;
   AppStack: NavigatorScreenParams<AppStackParamList>;
 };
 
-// Screen props
+// Screen Props
 export type SigninScreenProps = NativeStackScreenProps<
   AuthStackParamList,
   'Signin'
 >;
 
-export type HomeScreenProps = NativeStackScreenProps<
+export type HomeScreenProps = NativeBottomTabScreenProps<
   BottomTabParamList,
   'Home'
 >;
 
-export type AppStackScreenProps<T extends keyof AppStackParamList> =
-  NativeStackScreenProps<AppStackParamList, T>;
+export type RemindersScreenProps = NativeBottomTabScreenProps<
+  BottomTabParamList,
+  'Reminders'
+>;
+
+export type CategoriesScreenProps = NativeBottomTabScreenProps<
+  BottomTabParamList,
+  'Categories'
+>;
+
+export type ProfileScreenProps = NativeBottomTabScreenProps<
+  BottomTabParamList,
+  'Profile'
+>;
+
+export type AppStackScreenProps<
+  T extends keyof AppStackParamList
+> = NativeStackScreenProps<AppStackParamList, T>;

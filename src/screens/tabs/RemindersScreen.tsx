@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type {
   BottomTabParamList,
   AppStackParamList,
+  RemindersScreenProps,
 } from '../../navigation/types/navigation.types';
 
 import { mockReminders } from '../../data/mockReminders';
@@ -23,10 +24,14 @@ import ReminderFilter, {
 import ReminderSearch from '../../components/reminders/ReminderSearch';
 import ReminderItem from '../../components/reminders/ReminderItem.tsx';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
 
 
-export default function RemindersScreen({ navigation }: any) {
+
+export default function RemindersScreen({ navigation }: RemindersScreenProps) {
   const { colors } = useTheme();
+
+  const nav = navigation.getParent<NativeStackNavigationProp<AppStackParamList>>();
 
   const [filter, setFilter] = useState<ReminderFilterType>('Today');
   const [search, setSearch] = useState('');
@@ -89,7 +94,7 @@ export default function RemindersScreen({ navigation }: any) {
           <ReminderItem
             reminder={item}
             onPress={() =>
-              navigation.navigate('ReminderDetails', {
+              nav.navigate('ReminderDetails', {
                 reminderId: item.id,
               })
             }
@@ -110,7 +115,7 @@ export default function RemindersScreen({ navigation }: any) {
               </View>
 
               <Pressable
-                onPress={() => navigation.navigate('CreateReminder')}
+                onPress={() => nav.navigate('CreateReminder')}
                 style={[
                   styles.addButton,
                   { backgroundColor: colors.primary },

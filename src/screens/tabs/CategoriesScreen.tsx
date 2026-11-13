@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type {
   BottomTabParamList,
   AppStackParamList,
+  CategoriesScreenProps,
 } from '../../navigation/types/navigation.types';
 
 import type { Category } from '../../types/category.types';
@@ -24,10 +25,13 @@ import CategoryCard from '../../components/categories/CategoryCard';
 import CategorySearch from '../../components/categories/CategorySearch';
 import CategorySummary from '../../components/categories/CategorySummary';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
 
 
-export default function CategoriesScreen({ navigation }: any) {
+export default function CategoriesScreen({ navigation }: CategoriesScreenProps) {
   const { colors } = useTheme();
+  const nav =
+    navigation.getParent<NativeStackNavigationProp<AppStackParamList>>();
 
   const [search, setSearch] = useState('');
 
@@ -77,7 +81,7 @@ export default function CategoriesScreen({ navigation }: any) {
               </View>
 
               <Pressable
-                onPress={() => navigation?.navigate('CreateReminder')}
+                onPress={() => nav?.navigate('CreateReminder')}
                 style={[
                   styles.addButton,
                   { backgroundColor: colors.primary },
@@ -111,7 +115,7 @@ export default function CategoriesScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior='always'
       />
-      </SafeAreaView>
+    </SafeAreaView>
   );
 }
 
