@@ -197,54 +197,6 @@ export default function ProfileScreen({ navigation }: any) {
         />
       </ProfileSection>
 
-      {/* Account and Support */}
-      <ProfileSection title="Account & Support">
-        <View style={styles.menuCard}>
-          <ProfileMenuItem
-            icon="shield-check-outline"
-            title="Privacy & Security"
-            onPress={openPrivacy}
-          />
-
-          <MenuDivider />
-
-          <ProfileMenuItem
-            icon="database-outline"
-            title="Data & Backup"
-            onPress={openBackup}
-          />
-
-          <MenuDivider />
-
-          <ProfileMenuItem
-            icon="help-circle-outline"
-            title="Help & Support"
-            onPress={openSupport}
-          />
-
-          <MenuDivider />
-
-          <ProfileMenuItem
-            icon="information-outline"
-            title="About Notifier"
-            onPress={openAbout}
-          />
-        </View>
-      </ProfileSection>
-
-      {/* Sign Out */}
-      <Pressable
-        onPress={handleSignOut}
-        style={styles.signOutButton}
-      >
-        <MaterialDesignIcons
-          name="logout"
-          size={20}
-          color="#DC2626"
-        />
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </Pressable>
-
       <Text style={[styles.version, { color: colors.text + '80' }]}>
         Notifier · Version 1.0.0
       </Text>
