@@ -18,6 +18,7 @@ export default function BottomTabNavigator() {
       scrollEdgeAppearance='transparent'
       tabBarInactiveTintColor='#9CA3AF'
       tabBarActiveTintColor="#2563EB"
+
     >
       <Tab.Screen
         name="Home"
@@ -36,7 +37,7 @@ export default function BottomTabNavigator() {
         options={{
           title: 'Reminders',
           tabBarIcon: ({ focused }) => ({
-            sfSymbol: focused ? 'calendar.circle.fill' : 'calendar',
+            sfSymbol: focused ? 'calendar' : 'calendar',
           }),
         }}
       />
