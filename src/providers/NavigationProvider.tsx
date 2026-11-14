@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { lightTheme, darkTheme } from '../utils/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { ToastProvider } from './ToastProvider';
 
 export default function NavigationProvider({
   children,
@@ -18,9 +19,11 @@ export default function NavigationProvider({
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <NavigationContainer theme={activeTheme}>
-          {children}
-        </NavigationContainer>
+        <ToastProvider>
+          <NavigationContainer theme={activeTheme}>
+            {children}
+          </NavigationContainer>
+        </ToastProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

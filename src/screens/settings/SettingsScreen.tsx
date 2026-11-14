@@ -11,17 +11,14 @@ import {
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
 import { PlatformCard } from '../../components/ui/card';
-import ThemeSelector from '../../components/settings/ThemeSelector';
 
 import {
   defaultNotificationSettings,
   getNotificationSettings,
   saveNotificationSettings,
   type NotificationSettings,
-} from '../../services/setting/settings';
+} from '../../services/settings';
 
 
 export default function SettingsScreen({ navigation }: any) {
@@ -153,15 +150,6 @@ export default function SettingsScreen({ navigation }: any) {
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior='always'
     >
-      {/* Appearance */}
-      {/* <SettingsSection
-        title="Appearance"
-        subtitle="Customize how Notifier looks"
-      >
-        <ThemeSelector />
-      </SettingsSection> */}
-
-      {/* Notifications */}
       <SettingsSection
         title="Notifications"
         subtitle="Manage your notification preferences"
