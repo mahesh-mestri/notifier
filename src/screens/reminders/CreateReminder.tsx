@@ -66,11 +66,6 @@ const createDefaultValues = (): ReminderFormValues => ({
 function CreateReminder() {
   const { colors } = useTheme();
   const toast = useToast();
-
-  // const [title, setTitle] = useState('');
-  // const [description, setDescription] = useState('');
-  // const [categoryId, setCategoryId] = useState<ReminderCategoryType>('personal');
-  // const [scheduleType, setScheduleType] = useState<ReminderType>('once');
   const [form, setForm] = useState<ReminderFormValues>(
     createDefaultValues(),
   );
@@ -297,20 +292,20 @@ function CreateReminder() {
         />
       )}
 
-      {/* 
-      {scheduleType === 'daily' && (
+      
+      {form.scheduleType === 'daily' && (
         <DailySchedule
           value={{
             startDate: form.startDate,
             endDate: form.endDate,
             reminderTime: form.reminderTime,
           }}
-          onChange={(key, value) => handleFormChange(key, value)}
-          onPickDate={target => handlePickDate(target)}
+          onChange={handleFormChange}
         />
       )}
 
-      {scheduleType === 'weekly' && (
+
+      {form.scheduleType === 'weekly' && (
         <WeeklySchedule
           value={{
             startDate: form.startDate,
@@ -318,12 +313,12 @@ function CreateReminder() {
             reminderTime: form.reminderTime,
             selectedWeekdays: form.selectedWeekdays,
           }}
-          onChange={(key, value) => handleFormChange(key, value)}
-          onPickDate={target => handlePickDate(target)}
+          onChange={handleFormChange}
         />
       )}
+       
 
-      {scheduleType === 'monthly' && (
+      {form.scheduleType === 'monthly' && (
         <MonthlySchedule
           value={{
             startDate: form.startDate,
@@ -331,12 +326,10 @@ function CreateReminder() {
             reminderTime: form.reminderTime,
             dayOfMonth: form.dayOfMonth,
           }}
-          onChange={(key, value) => handleFormChange(key, value)}
-          onPickDate={target => handlePickDate(target)}
+          onChange={handleFormChange}
         />
       )}
 
-       */}
 
       <Button
         onPress={_createReminder}

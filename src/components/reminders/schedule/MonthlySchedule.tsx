@@ -1,92 +1,337 @@
 
-import React, { memo } from 'react';
-import { StyleSheet, Text, Pressable, View } from 'react-native';
+import React, { memo, useRef } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
 import { useTheme } from '@react-navigation/native';
+import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
 import { format } from 'date-fns';
 
 import { FormSection } from '../../ui/Field';
+
 import type { ReminderFormValues } from '../../../types/reminder.types';
 
+import ReminderDateTimeBottomSheet, {
+  type ReminderDateTimeBottomSheetRef,
+  type ReminderPickerField,
+} from '../ReminderDateTimeBottomSheet';
+
+type ScheduleField =
+  | 'startDate'
+  | 'endDate'
+  | 'reminderTime'
+  | 'dayOfMonth';
+
 type Props = {
-  value: Pick<ReminderFormValues, 'startDate' | 'endDate' | 'reminderTime' | 'dayOfMonth'>;
-  onChange: (key: 'dayOfMonth', value: number) => void;
-  onPickDate: (target: 'start' | 'end' | 'reminderTime') => void;
+  value: Pick<ReminderFormValues, ScheduleField>;
+  onChange: <K extends ScheduleField>(
+    key: K,
+    value: ReminderFormValues[K],
+  ) => void;
 };
 
-function MonthlySchedule({ value, onChange, onPickDate }: Props) {
+function MonthlySchedule({ value, onChange }: Props) {
   const { colors } = useTheme();
+
+  const bottomSheetRef =
+    useRef<ReminderDateTimeBottomSheetRef>(null);
+
+  const handleOpenPicker = (field: ReminderPickerField) => {
+    const pickerValues: Partial<
+      Record<ReminderPickerField, Date>
+    > = {
+      start: value.startDate,
+      end: value.endDate ?? value.startDate,
+      time: value.reminderTime,
+    };
+
+    const selectedValue = pickerValues[field];
+
+    if (!selectedValue) return;
+
+    bottomSheetRef.current?.open({
+      field,
+      value: selectedValue,
+      minimumDate:
+        field === 'end' ? value.startDate : undefined,
+    });
+  };
+
+  const handleConfirm = (
+    field: ReminderPickerField,
+    date: Date,
+  ) => {
+    switch (field) {
+      case 'start':
+        onChange('startDate', date);
+        break;
+
+      case 'end':
+        onChange('endDate', date);
+        break;
+
+      case 'time':
+        onChange('reminderTime', date);
+        break;
+    }
+  };
+
+  const handleDayChange = (increment: number) => {
+    const nextDay = Math.min(
+      31,
+      Math.max(1, value.dayOfMonth + increment),
+    );
+
+    onChange('dayOfMonth', nextDay);
+  };
+
+  const renderDatePicker = (
+    label: string,
+    field: 'start' | 'end',
+    date: Date | null,
+  ) => (
+    <Pressable
+      style={[
+        styles.pickerContainer,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+      onPress={() => handleOpenPicker(field)}
+    >
+      <Text
+        style={[
+          styles.pickerLabel,
+          { color: colors.text },
+        ]}
+      >
+        {label}
+      </Text>
+
+      <View style={styles.pickerValue}>
+        <MaterialDesignIcons
+          name="calendar-month-outline"
+          size={20}
+          color={colors.primary}
+        />
+
+        <Text
+          style={[
+            styles.pickerText,
+            { color: colors.text },
+          ]}
+        >
+          {date ? format(date, 'dd MMM yyyy') : 'Select date'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+
+  const renderTimePicker = () => (
+    <Pressable
+      style={[
+        styles.pickerContainer,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+      onPress={() => handleOpenPicker('time')}
+    >
+      <Text
+        style={[
+          styles.pickerLabel,
+          { color: colors.text },
+        ]}
+      >
+        Reminder Time
+      </Text>
+
+      <View style={styles.pickerValue}>
+        <MaterialDesignIcons
+          name="clock-outline"
+          size={20}
+          color={colors.primary}
+        />
+
+        <Text
+          style={[
+            styles.pickerText,
+            { color: colors.text },
+          ]}
+        >
+          {format(value.reminderTime, 'hh:mm a')}
+        </Text>
+      </View>
+    </Pressable>
+  );
 
   return (
     <View>
-      <FormSection title="Day of Month">
-        <View style={styles.days}>
-          {[1, 5, 10, 15, 20, 25, 28, 30, 31].map(day => {
-            const selected = value.dayOfMonth === day;
+      <FormSection title="Schedule Duration">
+        <View style={styles.row}>
+          <View style={styles.halfWidth}>
+            {renderDatePicker(
+              'Start Date',
+              'start',
+              value.startDate,
+            )}
+          </View>
 
-            return (
-              <Pressable
-                key={day}
-                onPress={() => onChange('dayOfMonth', day)}
-                style={[
-                  styles.day,
-                  {
-                    backgroundColor: selected ? colors.primary : colors.card,
-                    borderColor: selected ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <Text style={{ color: selected ? '#FFFFFF' : colors.text }}>
-                  {day}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <View style={styles.halfWidth}>
+            {renderDatePicker(
+              'End Date (Optional)',
+              'end',
+              value.endDate,
+            )}
+          </View>
         </View>
       </FormSection>
 
-      <FormSection title="Start Date">
-        <Pressable onPress={() => onPickDate('start')} style={[styles.picker, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={{ color: colors.text }}>{format(value.startDate, 'dd MMM yyyy')}</Text>
-        </Pressable>
+      <FormSection title="Monthly Reminder">
+        {renderTimePicker()}
       </FormSection>
 
-      <FormSection title="Reminder Time">
-        <Pressable onPress={() => onPickDate('reminderTime')} style={[styles.picker, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={{ color: colors.text }}>{format(value.reminderTime, 'hh:mm a')}</Text>
-        </Pressable>
+      <FormSection title="Repeat On">
+        <View
+          style={[
+            styles.dayContainer,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Pressable
+            onPress={() => handleDayChange(-1)}
+            disabled={value.dayOfMonth <= 1}
+            style={styles.counterButton}
+          >
+            <MaterialDesignIcons
+              name="minus-circle-outline"
+              size={26}
+              color={
+                value.dayOfMonth <= 1
+                  ? colors.border
+                  : colors.primary
+              }
+            />
+          </Pressable>
+
+          <View style={styles.dayValue}>
+            <Text
+              style={[
+                styles.dayNumber,
+                { color: colors.text },
+              ]}
+            >
+              {value.dayOfMonth}
+            </Text>
+
+            <Text
+              style={[
+                styles.dayLabel,
+                { color: colors.text },
+              ]}
+            >
+              Day of every month
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={() => handleDayChange(1)}
+            disabled={value.dayOfMonth >= 31}
+            style={styles.counterButton}
+          >
+            <MaterialDesignIcons
+              name="plus-circle-outline"
+              size={26}
+              color={
+                value.dayOfMonth >= 31
+                  ? colors.border
+                  : colors.primary
+              }
+            />
+          </Pressable>
+        </View>
+
+        <Text
+          style={[
+            styles.helperText,
+            { color: colors.text },
+          ]}
+        >
+          Your reminder will repeat on day {value.dayOfMonth} of every month.
+        </Text>
       </FormSection>
 
-      <FormSection title="End Date (Optional)">
-        <Pressable onPress={() => onPickDate('end')} style={[styles.picker, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={{ color: colors.text }}>
-            {value.endDate ? format(value.endDate, 'dd MMM yyyy') : 'No end date'}
-          </Text>
-        </Pressable>
-      </FormSection>
+      <ReminderDateTimeBottomSheet
+        ref={bottomSheetRef}
+        onConfirm={handleConfirm}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  days: {
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 9,
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  day: {
-    width: 43,
-    height: 43,
+  halfWidth: {
+    flex: 1,
+  },
+  pickerContainer: {
     borderWidth: 1,
     borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  pickerLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  pickerValue: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
   },
-  picker: {
-    minHeight: 52,
+  pickerText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dayContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
+    padding: 12,
+  },
+  counterButton: {
+    padding: 4,
+  },
+  dayValue: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  dayNumber: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  dayLabel: {
+    fontSize: 12,
+  },
+  helperText: {
+    fontSize: 12,
+    opacity: 0.65,
+    marginTop: 10,
   },
 });
 
