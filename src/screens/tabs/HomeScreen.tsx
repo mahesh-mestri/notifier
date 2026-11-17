@@ -119,23 +119,6 @@ function HomeScreen({ navigation }: Props) {
               {dateLabel}
             </Text>
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Notification settings"
-            style={[
-              styles.notificationButton,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            onPress={() => nav?.navigate('NotificationSettings')}
-          >
-            <Text style={[styles.notificationIcon, { color: colors.primary }]}>
-              ♧
-            </Text>
-          </Pressable>
         </View>
 
         {/* Summary Cards */}

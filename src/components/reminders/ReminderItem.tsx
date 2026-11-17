@@ -22,7 +22,7 @@ export default function ReminderItem({ reminder, onPress }: Props) {
   const { colors } = useTheme();
   const category = categoryInfo[reminder.categoryId];
 
-  const time = new Date(reminder.scheduledAt).toLocaleTimeString('en-IN', {
+  const time = new Date(Date.now()).toLocaleTimeString('en-IN', {
     hour: 'numeric',
     minute: '2-digit',
   });

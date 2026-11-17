@@ -12,7 +12,6 @@ import { useTheme } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type {
-  BottomTabParamList,
   AppStackParamList,
   RemindersScreenProps,
 } from '../../navigation/types/navigation.types';
@@ -20,13 +19,10 @@ import type {
 import { mockReminders } from '../../data/mockReminders';
 import ReminderFilter, {
   ReminderFilterType,
-} from '../../components/reminders/ReminderFilter';
-import ReminderSearch from '../../components/reminders/ReminderSearch';
+} from '../../components/reminders/ReminderFilter.tsx';
+import ReminderSearch from '../../components/reminders/ReminderSearch.tsx';
 import ReminderItem from '../../components/reminders/ReminderItem.tsx';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeBottomTabScreenProps } from '@bottom-tabs/react-navigation';
-
-
 
 export default function RemindersScreen({ navigation }: RemindersScreenProps) {
   const { colors } = useTheme();
@@ -39,63 +35,63 @@ export default function RemindersScreen({ navigation }: RemindersScreenProps) {
 
   const filteredReminders = useMemo(() => {
     const now = new Date();
+    return []
+    // return mockReminders.filter(reminder => {
+    //   const reminderDate = new Date(reminder.sc.scheduledAt);
 
-    return mockReminders.filter(reminder => {
-      const reminderDate = new Date(reminder.scheduledAt);
+    //   const sameDay =
+    //     reminderDate.getDate() === now.getDate() &&
+    //     reminderDate.getMonth() === now.getMonth() &&
+    //     reminderDate.getFullYear() === now.getFullYear();
 
-      const sameDay =
-        reminderDate.getDate() === now.getDate() &&
-        reminderDate.getMonth() === now.getMonth() &&
-        reminderDate.getFullYear() === now.getFullYear();
+    //   let matchesFilter = false;
 
-      let matchesFilter = false;
+    //   switch (filter) {
+    //     case 'Today':
+    //       matchesFilter = sameDay &&
+    //         (reminder.status === 'pending' ||
+    //           reminder.status === 'snoozed');
+    //       break;
 
-      switch (filter) {
-        case 'Today':
-          matchesFilter = sameDay &&
-            (reminder.status === 'pending' ||
-              reminder.status === 'snoozed');
-          break;
+    //     case 'Upcoming':
+    //       matchesFilter =
+    //         reminderDate > now &&
+    //         (reminder.status === 'pending' ||
+    //           reminder.status === 'snoozed');
+    //       break;
 
-        case 'Upcoming':
-          matchesFilter =
-            reminderDate > now &&
-            (reminder.status === 'pending' ||
-              reminder.status === 'snoozed');
-          break;
+    //     case 'Completed':
+    //       matchesFilter = reminder.status === 'completed';
+    //       break;
 
-        case 'Completed':
-          matchesFilter = reminder.status === 'completed';
-          break;
+    //     case 'Missed':
+    //       matchesFilter = reminder.status === 'missed';
+    //       break;
+    //   }
 
-        case 'Missed':
-          matchesFilter = reminder.status === 'missed';
-          break;
-      }
+    //   const matchesSearch = reminder.title
+    //     .toLowerCase()
+    //     .includes(search.trim().toLowerCase());
 
-      const matchesSearch = reminder.title
-        .toLowerCase()
-        .includes(search.trim().toLowerCase());
-
-      return matchesFilter && matchesSearch;
-    }).sort(
-      (a, b) =>
-        new Date(a.scheduledAt).getTime() -
-        new Date(b.scheduledAt).getTime(),
-    );
+    //   return matchesFilter && matchesSearch;
+    // }).sort(
+    //   (a, b) =>
+    //     new Date(a.scheduledAt).getTime() -
+    //     new Date(b.scheduledAt).getTime(),
+    // );
   }, [filter, search]);
 
   return (
     <SafeAreaView edges={['bottom']} style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredReminders}
-        keyExtractor={item => item.id}
+        keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
           <ReminderItem
             reminder={item}
             onPress={() =>
               nav.navigate('ReminderDetails', {
-                reminderId: item.id,
+                reminderId: '',
               })
             }
           />

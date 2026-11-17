@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import TextInput from '../../components/ui/TextInput';
 import type { AuthStackParamList } from '../../navigation/types/navigation.types';
-import { signupSchema } from '../../validations/auth.validation';
+import { signupSchema } from '../../schema/auth.schema';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 

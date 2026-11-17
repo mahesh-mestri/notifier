@@ -1,779 +1,359 @@
 
-import React, { useRef, useState } from 'react';
-
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-
+import React, { memo, useCallback, useRef, useState } from 'react';
+import { StyleSheet, ScrollView, View } from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import { FormSection, FieldError } from '../../components/ui/Field';
 
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
-
-import type { AppStackParamList } from '../../navigation/types/navigation.types';
-
-import type {
-  Reminder,
-  ReminderCategory,
-} from '../../types/reminder.types';
-
-import { mockReminders } from '../../data/mockReminders';
-
+import TextInput from '../../components/ui/TextInput';
 import Button from '../../components/ui/Button';
+import { CreateReminderRequest, Reminder, ReminderCategory as ReminderCategoryType, ReminderFormErrors, ReminderFormValues, ReminderSchedule, ReminderType } from '../../types/reminder.types';
+import ReminderCategory from '../../components/reminders/ReminderCategory';
+import ReminderTypeSelector from '../../components/reminders/ReminderTypeSelector';
+import OneTimeSchedule from '../../components/reminders/schedule/OneTimeSchedule';
+import IntervalSchedule from '../../components/reminders/schedule/IntervalSchedule';
+import DailySchedule from '../../components/reminders/schedule/DailySchedule';
+import WeeklySchedule from '../../components/reminders/schedule/WeeklySchedule';
+import MonthlySchedule from '../../components/reminders/schedule/MonthlySchedule';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ReminderDateTimeBottomSheet, { ReminderDateTimeBottomSheetRef, ReminderPickerField, ReminderPickerOptions } from '../../components/reminders/ReminderDateTimeBottomSheet';
+import { reminderSchema } from '../../schema/reminder.schema';
+import { format } from 'date-fns';
 
-import ReminderDateTimeBottomSheet, {
+interface FormErrors {
+  title?: string;
+  description?: string;
+}
 
-  type ReminderDateTimeBottomSheetRef,
-  type ReminderPickerField,
-} from '../../components/reminders/ReminderDateTimeBottomSheet';
+const createDefaultValues = (): ReminderFormValues => ({
+  title: '',
+  description: '',
+  categoryId: 'personal',
 
-type Props = NativeStackScreenProps<
-  AppStackParamList,
-  'CreateReminder'
->;
+  scheduleType: 'once',
 
-type ScheduleType = 'single' | 'range';
+  startDate: new Date(),
+  endDate: null,
 
-const categories: {
-  label: string;
-  value: ReminderCategory;
-}[] = [
-    { label: 'Personal', value: 'personal' },
-    { label: 'Work', value: 'work' },
-    { label: 'Health', value: 'health' },
-    { label: 'Other', value: 'other' },
-  ];
-
-export default function CreateReminderScreen({
-  navigation,
-}: Props) {
-  const { colors } = useTheme();
-
-  // Bottom sheet reference
-  const reminderPickerRef =
-    useRef<ReminderDateTimeBottomSheetRef>(null);
-
-  // Form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-
-  const [categoryId, setCategoryId] =
-    useState<ReminderCategory>('personal');
-
-  // Schedule state
-  const [scheduleType, setScheduleType] =
-    useState<ScheduleType>('single');
-
-  const [startDate, setStartDate] = useState(() => {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    return date;
-  });
-
-  const [endDate, setEndDate] = useState(() => {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    return date;
-  });
-
-  const [selectedTime, setSelectedTime] = useState(() => {
+  reminderTime: (() => {
     const date = new Date();
     date.setHours(9, 0, 0, 0);
     return date;
-  });
+  })(),
 
-  // Reminder preferences
-  const [isRecurring, setIsRecurring] = useState(false);
+  intervalValue: 30,
+  intervalUnit: 'minutes',
 
-  const [notificationEnabled, setNotificationEnabled] =
-    useState(true);
+  windowStartTime: (() => {
+    const date = new Date();
+    date.setHours(7, 0, 0, 0);
+    return date;
+  })(),
 
-  // Formatting
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+  windowEndTime: (() => {
+    const date = new Date();
+    date.setHours(22, 0, 0, 0);
+    return date;
+  })(),
 
-  const formatTime = (date: Date) =>
-    date.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  selectedWeekdays: [],
 
-  // Open reminder date/time bottom sheet
-  const openPicker = (
-    field: ReminderPickerField,
-  ) => {
-    const currentValue =
-      field === 'time'
-        ? selectedTime
-        : field === 'start'
-          ? startDate
-          : endDate;
+  dayOfMonth: 1,
 
-    const minimumDate =
-      field === 'end'
-        ? startDate
-        : field === 'start'
-          ? new Date(new Date().setHours(0, 0, 0, 0))
-          : undefined;
+  notificationEnabled: true,
+});
 
-    reminderPickerRef.current?.open({
-      field,
-      value: currentValue,
-      minimumDate,
-    });
-  };
+function CreateReminder() {
+  const { colors } = useTheme();
 
-  // Receive selected value from bottom sheet
-  const handlePickerConfirm = (
-    field: ReminderPickerField,
-    selectedDate: Date,
-  ) => {
-    if (field === 'time') {
-      setSelectedTime(selectedDate);
-      return;
-    }
 
-    if (field === 'start') {
-      setStartDate(selectedDate);
+  // const [title, setTitle] = useState('');
+  // const [description, setDescription] = useState('');
+  // const [categoryId, setCategoryId] = useState<ReminderCategoryType>('personal');
+  // const [scheduleType, setScheduleType] = useState<ReminderType>('once');
+  const [form, setForm] = useState<ReminderFormValues>(
+    createDefaultValues(),
+  );
 
-      setEndDate(previous =>
-        previous < selectedDate
-          ? selectedDate
-          : previous,
-      );
+  const [errors, setErrors] = useState<FormErrors>({});
 
-      return;
-    }
+  const handleTitleChange = (value: string) => {
+    setForm(prev => ({ ...prev, title: value }));
 
-    setEndDate(selectedDate);
-  };
-
-  // Schedule type
-  const handleScheduleTypeChange = (
-    type: ScheduleType,
-  ) => {
-    setScheduleType(type);
-
-    if (type === 'single') {
-      setEndDate(startDate);
+    if (errors.title) {
+      setErrors(prev => ({ ...prev, title: undefined }));
     }
   };
 
-  // Create reminder
-  const handleCreateReminder = () => {
-    if (!title.trim()) {
-      Alert.alert(
-        'Required',
-        'Please enter a reminder title.',
-      );
-      return;
+  const handleDescriptionChange = (value: string) => {
+    setForm(prev => ({ ...prev, description: value }));
+
+    if (errors.description) {
+      setErrors(prev => ({ ...prev, description: undefined }));
     }
+  };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const handlerReminderTypeSelector = useCallback((value: ReminderType) => {
+    setForm(prev => ({
+      ...prev,
+      ...createDefaultValues(),
+      title: prev.title,
+      description: prev.description,
+      categoryId: prev.categoryId,
+      scheduleType: value,
+    }));
 
-    const selectedStart = new Date(startDate);
-    selectedStart.setHours(0, 0, 0, 0);
+    setErrors({});
+  }, []);
 
-    const selectedEnd = new Date(endDate);
-    selectedEnd.setHours(0, 0, 0, 0);
+  const SetupSchdule = (
+    key: keyof ReminderFormValues,
+    value: Date,
+  ) => {
+    setForm(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
-    if (selectedStart < today) {
-      Alert.alert(
-        'Invalid date',
-        'Start date cannot be in the past.',
-      );
-      return;
+
+  const buildSchedulePayload = (): ReminderSchedule => {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    switch (form.scheduleType) {
+      case 'once':
+        return {
+          type: 'once',
+          date: format(form.startDate, 'yyyy-MM-dd'),
+          time: format(form.reminderTime, 'HH:mm'),
+          timeZone,
+        };
+
+      case 'interval':
+        return {
+          type: 'interval',
+          startDate: format(form.startDate, 'yyyy-MM-dd'),
+          endDate: form.endDate
+            ? format(form.endDate, 'yyyy-MM-dd')
+            : undefined,
+          intervalValue: form.intervalValue,
+          intervalUnit: form.intervalUnit,
+          windowStartTime: format(form.windowStartTime, 'HH:mm'),
+          windowEndTime: format(form.windowEndTime, 'HH:mm'),
+          timeZone,
+        };
+
+      case 'daily':
+        return {
+          type: 'daily',
+          startDate: format(form.startDate, 'yyyy-MM-dd'),
+          endDate: form.endDate
+            ? format(form.endDate, 'yyyy-MM-dd')
+            : undefined,
+          time: format(form.reminderTime, 'HH:mm'),
+          timeZone,
+        };
+
+      case 'weekly':
+        return {
+          type: 'weekly',
+          startDate: format(form.startDate, 'yyyy-MM-dd'),
+          endDate: form.endDate
+            ? format(form.endDate, 'yyyy-MM-dd')
+            : undefined,
+          time: format(form.reminderTime, 'HH:mm'),
+          weekdays: form.selectedWeekdays,
+          timeZone,
+        };
+
+      case 'monthly':
+        return {
+          type: 'monthly',
+          startDate: format(form.startDate, 'yyyy-MM-dd'),
+          endDate: form.endDate
+            ? format(form.endDate, 'yyyy-MM-dd')
+            : undefined,
+          time: format(form.reminderTime, 'HH:mm'),
+          dayOfMonth: form.dayOfMonth,
+          timeZone,
+        };
     }
+  };
 
-    if (
-      scheduleType === 'range' &&
-      selectedEnd < selectedStart
-    ) {
-      Alert.alert(
-        'Invalid date range',
-        'End date must be after or equal to start date.',
-      );
-      return;
-    }
 
-    const scheduledDate = new Date(startDate);
-
-    scheduledDate.setHours(
-      selectedTime.getHours(),
-      selectedTime.getMinutes(),
-      0,
-      0,
-    );
-
-    if (scheduledDate.getTime() <= Date.now()) {
-      Alert.alert(
-        'Invalid time',
-        'Please select a future date and time.',
-      );
-      return;
-    }
-
-    const newReminder: Reminder = {
-      id: `reminder_${Date.now()}`,
-      title: title.trim(),
-      description: description.trim(),
-      categoryId,
-      scheduledAt: scheduledDate.toISOString(),
-      status: 'pending',
-      isRecurring,
-      notificationEnabled,
+  const _createReminder = () => {
+    const payload: CreateReminderRequest = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      categoryId: form.categoryId,
+      schedule: buildSchedulePayload(),
+      notificationEnabled: form.notificationEnabled,
     };
 
-    // Temporary mock-data storage.
-    // Replace with reminderService.create() later.
-    mockReminders.push(newReminder);
+    const result = reminderSchema.safeParse(payload);
 
-    Alert.alert(
-      'Reminder created',
-      'Your reminder has been created successfully.',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
+    if (!result.success) {
+      const nextErrors: ReminderFormErrors = {};
+
+      result.error.issues.forEach(issue => {
+        const field = issue.path[0];
+
+        if (
+          field === 'title' ||
+          field === 'description'
+        ) {
+          nextErrors[field] = issue.message;
+        } else if (field === 'schedule') {
+          nextErrors.schedule = issue.message;
+        }
+      });
+
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+
+    console.log('Validated Payload:', result.data);
+
+    // Next: Call create reminder API
   };
 
+
   return (
-    <KeyboardAvoidingView
-      style={[
-        styles.screen,
-        { backgroundColor: colors.background },
-      ]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="always"
+    <ScrollView
+      contentInsetAdjustmentBehavior='always'
+      contentContainerStyle={[styles.container, styles.p12]} >
+      {/* Reminder Title */}
+      <FormSection title="Reminder Title">
+        <TextInput
+          placeholder="What do you want to remember?"
+          placeholderTextColor={colors.text}
+          value={form.title}
+          onChangeText={handleTitleChange}
+          maxLength={100}
+        />
+
+        <FieldError message={errors.title} />
+      </FormSection>
+
+      {/* Description */}
+      <FormSection title="Description (Optional)">
+        <TextInput
+          style={[
+            styles.descriptionInput,
+          ]}
+          placeholder="Add more details..."
+          placeholderTextColor={colors.text}
+          value={form.description}
+          onChangeText={handleDescriptionChange}
+          multiline
+          numberOfLines={4}
+          maxLength={500}
+          textAlignVertical="top"
+        />
+
+        <FieldError message={errors.description} />
+      </FormSection>
+
+      {/* category */}
+      <ReminderCategory
+        value={form.categoryId}
+        onChange={handleDescriptionChange}
+      />
+
+      {/* schdules */}
+      <ReminderTypeSelector
+        value={form.scheduleType}
+        onChange={handlerReminderTypeSelector}
+      />
+
+      {/* Schedule Configuration */}
+      {form.scheduleType === 'once' && (
+        <OneTimeSchedule
+          value={{
+            startDate: form.startDate,
+            reminderTime: form.reminderTime,
+          }}
+          onChange={SetupSchdule}
+        />
+      )}
+
+      {/* {form.scheduleType === 'interval' && (
+        <IntervalSchedule
+          value={{
+            startDate: form.startDate,
+            endDate: form.endDate,
+            intervalValue: form.intervalValue,
+            intervalUnit: form.intervalUnit,
+            windowStartTime: form.windowStartTime,
+            windowEndTime: form.windowEndTime,
+          }}
+          onChange={handleFormChange}
+        />
+      )} */}
+
+      {/* 
+      {scheduleType === 'daily' && (
+        <DailySchedule
+          value={{
+            startDate: form.startDate,
+            endDate: form.endDate,
+            reminderTime: form.reminderTime,
+          }}
+          onChange={(key, value) => handleFormChange(key, value)}
+          onPickDate={target => handlePickDate(target)}
+        />
+      )}
+
+      {scheduleType === 'weekly' && (
+        <WeeklySchedule
+          value={{
+            startDate: form.startDate,
+            endDate: form.endDate,
+            reminderTime: form.reminderTime,
+            selectedWeekdays: form.selectedWeekdays,
+          }}
+          onChange={(key, value) => handleFormChange(key, value)}
+          onPickDate={target => handlePickDate(target)}
+        />
+      )}
+
+      {scheduleType === 'monthly' && (
+        <MonthlySchedule
+          value={{
+            startDate: form.startDate,
+            endDate: form.endDate,
+            reminderTime: form.reminderTime,
+            dayOfMonth: form.dayOfMonth,
+          }}
+          onChange={(key, value) => handleFormChange(key, value)}
+          onPickDate={target => handlePickDate(target)}
+        />
+      )}
+
+       */}
+
+      <Button
+        onPress={_createReminder}
       >
-        {/* Header */}
-        <View style={styles.intro}>
-          <Text style={[styles.subtitle, { color: colors.text }]}>
-            Add something important to your schedule.
-          </Text>
-        </View>
+        Create Reminder
+      </Button>
+    </ScrollView>
 
-        {/* Title */}
-        <FormSection title="Reminder title">
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="What do you need to remember?"
-            placeholderTextColor={colors.text + '80'}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            maxLength={100}
-          />
-        </FormSection>
-
-        {/* Description */}
-        <FormSection title="Description (optional)">
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Add some details..."
-            placeholderTextColor={colors.text + '80'}
-            multiline
-            textAlignVertical="top"
-            style={[
-              styles.input,
-              styles.descriptionInput,
-              {
-                color: colors.text,
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            maxLength={500}
-          />
-        </FormSection>
-
-        {/* Category */}
-        <FormSection title="Category">
-          <View style={styles.categoryList}>
-            {categories.map(category => {
-              const selected = categoryId === category.value;
-
-              return (
-                <Pressable
-                  key={category.value}
-                  onPress={() => setCategoryId(category.value)}
-                  style={[
-                    styles.categoryButton,
-                    {
-                      backgroundColor: selected
-                        ? colors.primary + '18'
-                        : colors.card,
-                      borderColor: selected
-                        ? colors.primary
-                        : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      color: selected
-                        ? colors.primary
-                        : colors.text,
-                      fontWeight: selected ? '700' : '500',
-                    }}
-                  >
-                    {category.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </FormSection>
-
-        {/* Schedule */}
-        <FormSection title="Schedule">
-          <View style={styles.scheduleOptions}>
-            <ScheduleOption
-              label="One-time"
-              selected={scheduleType === 'single'}
-              onPress={() => handleScheduleTypeChange('single')}
-            />
-
-            <ScheduleOption
-              label="Date Range"
-              selected={scheduleType === 'range'}
-              onPress={() => handleScheduleTypeChange('range')}
-            />
-          </View>
-
-          <DateSelectionRow
-            label={
-              scheduleType === 'single'
-                ? 'Reminder Date'
-                : 'Start Date'
-            }
-            value={formatDate(startDate)}
-            onPress={() => openPicker('start')}
-          />
-
-          {scheduleType === 'range' && (
-            <DateSelectionRow
-              label="End Date"
-              value={formatDate(endDate)}
-              onPress={() => openPicker('end')}
-            />
-          )}
-
-          <DateSelectionRow
-            label="Reminder Time"
-            value={formatTime(selectedTime)}
-            onPress={() => openPicker('time')}
-          />
-
-          {scheduleType === 'range' && (
-            <Text
-              style={[
-                styles.helperText,
-                { color: colors.text },
-              ]}
-            >
-              This reminder is intended to repeat daily between
-              the selected dates.
-            </Text>
-          )}
-        </FormSection>
-
-        {/* Repeat */}
-        <FormSection title="Repeat">
-          <SettingRow
-            icon="repeat"
-            title="Recurring reminder"
-            subtitle="Repeat this reminder"
-            value={isRecurring}
-            onValueChange={setIsRecurring}
-          />
-        </FormSection>
-
-        {/* Notification */}
-        <FormSection title="Notification">
-          <SettingRow
-            icon="bell-outline"
-            title="Enable notification"
-            subtitle="Notify me when this reminder is due"
-            value={notificationEnabled}
-            onValueChange={setNotificationEnabled}
-          />
-        </FormSection>
-
-        {/* Create Reminder */}
-        <Button
-          mode="contained"
-          buttonColor={colors.primary}
-          textColor="#FFFFFF"
-          icon="check"
-          onPress={handleCreateReminder}
-          style={styles.saveButton}
-        >
-          Create Reminder
-        </Button>
-      </ScrollView>
-
-      {/* Reminder Date & Time Bottom Sheet */}
-      <ReminderDateTimeBottomSheet
-        ref={reminderPickerRef}
-        onConfirm={handlePickerConfirm}
-      />
-    </KeyboardAvoidingView>
   );
 }
-
-/* ----------------------------------
-   Form Section
------------------------------------ */
-
-function FormSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  const { colors } = useTheme();
-
-  return (
-    <View style={styles.formSection}>
-      <Text style={[styles.label, { color: colors.text }]}>
-        {title}
-      </Text>
-
-      {children}
-    </View>
-  );
-}
-
-/* ----------------------------------
-   Schedule Option
------------------------------------ */
-
-function ScheduleOption({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.scheduleOption,
-        {
-          borderColor: selected
-            ? colors.primary
-            : colors.border,
-          backgroundColor: selected
-            ? colors.primary + '12'
-            : colors.card,
-        },
-      ]}
-    >
-      <Text
-        style={{
-          color: selected ? colors.primary : colors.text,
-          fontWeight: selected ? '700' : '500',
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-/* ----------------------------------
-   Date Selection Row
------------------------------------ */
-
-function DateSelectionRow({
-  label,
-  value,
-  onPress,
-}: {
-  label: string;
-  value: string;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.dateRow,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-        },
-      ]}
-    >
-      <MaterialDesignIcons
-        name="calendar-clock-outline"
-        size={22}
-        color={colors.primary}
-      />
-
-      <View style={styles.dateText}>
-        <Text
-          style={[
-            styles.dateLabel,
-            { color: colors.text },
-          ]}
-        >
-          {label}
-        </Text>
-
-        <Text
-          style={[
-            styles.dateValue,
-            { color: colors.text },
-          ]}
-        >
-          {value}
-        </Text>
-      </View>
-
-      <MaterialDesignIcons
-        name="chevron-right"
-        size={22}
-        color={colors.text}
-      />
-    </Pressable>
-  );
-}
-
-/* ----------------------------------
-   Setting Row
------------------------------------ */
-
-function SettingRow({
-  icon,
-  title,
-  subtitle,
-  value,
-  onValueChange,
-}: {
-  icon: string;
-  title: string;
-  subtitle: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  const { colors } = useTheme();
-
-  return (
-    <View
-      style={[
-        styles.settingRow,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-        },
-      ]}
-    >
-      <MaterialDesignIcons
-        name={icon as any}
-        size={23}
-        color={colors.primary}
-      />
-
-      <View style={styles.settingText}>
-        <Text
-          style={[
-            styles.settingTitle,
-            { color: colors.text },
-          ]}
-        >
-          {title}
-        </Text>
-
-        <Text
-          style={[
-            styles.helperText,
-            { color: colors.text },
-          ]}
-        >
-          {subtitle}
-        </Text>
-      </View>
-
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{
-          false: '#767577',
-          true: colors.primary,
-        }}
-        style={{alignSelf: 'center'}}
-      />
-    </View>
-  );
-}
-
-/* ----------------------------------
-   Styles
------------------------------------ */
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  container: {
+    flexGrow: 1,
   },
-
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-
-  intro: {
-    marginBottom: 26,
-  },
-
-  subtitle: {
-    fontSize: 13,
-    opacity: 0.65,
-    marginTop: 6,
-  },
-
-  formSection: {
-    marginBottom: 22,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-
-  input: {
-    minHeight: 52,
-    borderWidth: 1,
-    borderRadius: 13,
-    paddingHorizontal: 15,
-    fontSize: 14,
-  },
-
   descriptionInput: {
     minHeight: 105,
     paddingTop: 14,
   },
-
-  categoryList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 9,
-  },
-
-  categoryButton: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 17,
-    paddingVertical: 11,
-  },
-
-  scheduleOptions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 14,
-  },
-
-  scheduleOption: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 13,
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-
-  dateRow: {
-    minHeight: 65,
-    borderWidth: 1,
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-
-  dateText: {
-    flex: 1,
-  },
-
-  dateLabel: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-
-  dateValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 3,
-  },
-
-  helperText: {
-    fontSize: 11,
-    opacity: 0.6,
-    marginTop: 6,
-  },
-
-  settingRow: {
-    minHeight: 72,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-
-  settingText: {
-    flex: 1,
-  },
-
-  settingTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  saveButton: {
-    marginTop: 8,
-  },
+  p12: {
+    padding: 12
+  }
 });
+
+export default memo(CreateReminder);

@@ -9,12 +9,6 @@ import {
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-import type {
-  BottomTabParamList,
-  AppStackParamList,
-} from '../../navigation/types/navigation.types';
 
 import {
   ProfileHeader,

@@ -24,7 +24,14 @@ import { useTheme } from '@react-navigation/native';
 // Adjust if your Button component is in another folder.
 import Button from '../ui/Button';
 
-export type ReminderPickerField = 'start' | 'end' | 'time';
+export type ReminderPickerField =
+  | 'start'
+  | 'end'
+  | 'time'
+  | 'windowStart'
+  | 'windowEnd'
+  | 'reminderTime';
+
 
 export interface ReminderPickerOptions {
   field: ReminderPickerField;
@@ -119,7 +126,7 @@ const ReminderDateTimeBottomSheet = forwardRef<
           mode={isTimePicker ? 'time' : 'date'}
           display="spinner"
           is24Hour
-          onValueChange={(event, date) => {
+          onValueChange={(_: any, date: Date) => {
             setSelectedDate(date);
           }}
           minimumDate={

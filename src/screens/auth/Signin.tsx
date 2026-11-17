@@ -28,7 +28,7 @@ import {
   selectAuthError,
 } from '../../store/feature/auth/authSlice';
 
-import { signinSchema } from '../../validations/auth.validation';
+import { signinSchema } from '../../schema/auth.schema';
 
 import { useToast } from '../../providers/ToastProvider';
 import { isIOS } from '../../utils/os';
