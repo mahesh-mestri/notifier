@@ -21,7 +21,13 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
+
+import {
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,6 +77,7 @@ export const ToastProvider = ({
 
   const translateY = useSharedValue(-150);
   const opacity = useSharedValue(0);
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hideToast = useCallback(() => {
@@ -79,14 +86,19 @@ export const ToastProvider = ({
       timerRef.current = null;
     }
 
-    translateY.value = withTiming(-150, { duration: 250 });
-    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
-      if (finished) {
-        // State update happens after animation on JS thread.
-      }
+    translateY.value = withTiming(-150, {
+      duration: 250,
     });
 
-    setMounted(false);
+    opacity.value = withTiming(
+      0,
+      { duration: 180 },
+      finished => {
+        if (finished) {
+          runOnJS(setMounted)(false);
+        }
+      },
+    );
   }, [translateY, opacity]);
 
   const showToast = useCallback(
@@ -98,12 +110,19 @@ export const ToastProvider = ({
     ) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
 
       translateY.value = -150;
       opacity.value = 0;
 
-      setToast({ message, type, title, duration });
+      setToast({
+        message,
+        type,
+        title,
+        duration,
+      });
+
       setMounted(true);
     },
     [translateY, opacity],
@@ -120,26 +139,71 @@ export const ToastProvider = ({
       mass: 0.8,
     });
 
-    opacity.value = withTiming(1, { duration: 220 });
+    opacity.value = withTiming(1, {
+      duration: 220,
+    });
 
-    timerRef.current = setTimeout(hideToast, toast.duration);
+    timerRef.current = setTimeout(
+      hideToast,
+      toast.duration,
+    );
 
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [mounted, toast, hideToast, translateY, opacity]);
+
+  useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [mounted, toast, hideToast, translateY, opacity]);
+  }, []);
+
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
+    .onUpdate(event => {
+      // Only allow upward movement.
+      translateY.value = Math.min(0, event.translationY);
+    })
+    .onEnd(event => {
+      if (
+        event.translationY < -50 ||
+        event.velocityY < -500
+      ) {
+        runOnJS(hideToast)();
+      } else {
+        translateY.value = withSpring(0, {
+          damping: 18,
+          stiffness: 160,
+        });
+      }
+    });
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
+    transform: [
+      {
+        translateY: translateY.value,
+      },
+    ],
   }));
 
-  const config = toast ? TOAST_CONFIG[toast.type] : null;
+  const config = toast
+    ? TOAST_CONFIG[toast.type]
+    : null;
 
   return (
-    <ToastContext.Provider value={{ showToast, hideToast }}>
+    <ToastContext.Provider
+      value={{
+        showToast,
+        hideToast,
+      }}
+    >
       <View style={styles.root}>
         {children}
 
@@ -151,44 +215,50 @@ export const ToastProvider = ({
               animatedStyle,
             ]}
           >
-            <Pressable onPress={hideToast}>
-              <View style={styles.toast}>
-                <View style={styles.glassOverlay} />
+            <GestureDetector gesture={swipeGesture}>
+              <Pressable onPress={hideToast}>
+                <View style={styles.toast}>
+                  <View style={styles.glassOverlay} />
 
-                <View style={styles.content}>
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      { backgroundColor: config.color },
-                    ]}
-                  >
-                    <Text style={styles.icon}>
-                      {config.icon}
-                    </Text>
-                  </View>
-
-                  <View style={styles.textContainer}>
-                    <Text style={styles.title}>
-                      {toast.title}
-                    </Text>
-
-                    <Text
-                      style={styles.message}
-                      numberOfLines={2}
+                  <View style={styles.content}>
+                    <View
+                      style={[
+                        styles.iconContainer,
+                        {
+                          backgroundColor: config.color,
+                        },
+                      ]}
                     >
-                      {toast.message}
-                    </Text>
-                  </View>
+                      <Text style={styles.icon}>
+                        {config.icon}
+                      </Text>
+                    </View>
 
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: config.color },
-                    ]}
-                  />
+                    <View style={styles.textContainer}>
+                      <Text style={styles.title}>
+                        {toast.title}
+                      </Text>
+
+                      <Text
+                        style={styles.message}
+                        numberOfLines={2}
+                      >
+                        {toast.message}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor: config.color,
+                        },
+                      ]}
+                    />
+                  </View>
                 </View>
-              </View>
-            </Pressable>
+              </Pressable>
+            </GestureDetector>
           </Animated.View>
         )}
       </View>
@@ -200,7 +270,9 @@ export const useToast = () => {
   const context = useContext(ToastContext);
 
   if (!context) {
-    throw new Error('useToast must be used inside ToastProvider');
+    throw new Error(
+      'useToast must be used inside ToastProvider',
+    );
   }
 
   return context;
@@ -228,7 +300,10 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOpacity: 0.2,
         shadowRadius: 15,
-        shadowOffset: { width: 0, height: 8 },
+        shadowOffset: {
+          width: 0,
+          height: 8,
+        },
       },
       android: {
         elevation: 12,

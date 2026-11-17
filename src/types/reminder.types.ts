@@ -118,15 +118,6 @@ export interface ReminderOccurrence {
 /* ----------------------------------
    API request types
 ----------------------------------- */
-
-export interface CreateReminderRequest {
-  title: string;
-  description?: string;
-  categoryId: ReminderCategory;
-  schedule: ReminderSchedule;
-  notificationEnabled: boolean;
-}
-
 export interface UpdateReminderRequest {
   title?: string;
   description?: string;
@@ -263,16 +254,9 @@ export type ReminderFormErrors = Partial<
 export type ReminderPickerTarget =
   | 'start'
   | 'end'
-  | 'reminderTime'
+  | 'time'
   | 'windowStart'
-  | 'windowEnd'
-  | 'reminderTime'
-
-export interface FormErrors {
-  title?: string;
-  description?: string;
-  schedule?: string;
-}
+  | 'windowEnd';
 
 export interface CreateReminderRequest {
   title: string;

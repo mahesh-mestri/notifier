@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ReminderDateTimeBottomSheet, { ReminderDateTimeBottomSheetRef, ReminderPickerField, ReminderPickerOptions } from '../../components/reminders/ReminderDateTimeBottomSheet';
 import { reminderSchema } from '../../schema/reminder.schema';
 import { format } from 'date-fns';
+import { useToast } from '../../providers/ToastProvider';
 
 interface FormErrors {
   title?: string;
@@ -64,7 +65,7 @@ const createDefaultValues = (): ReminderFormValues => ({
 
 function CreateReminder() {
   const { colors } = useTheme();
-
+  const toast = useToast();
 
   // const [title, setTitle] = useState('');
   // const [description, setDescription] = useState('');
@@ -105,9 +106,9 @@ function CreateReminder() {
     setErrors({});
   }, []);
 
-  const SetupSchdule = (
-    key: keyof ReminderFormValues,
-    value: Date,
+  const handleFormChange = <K extends keyof ReminderFormValues>(
+    key: K,
+    value: ReminderFormValues[K],
   ) => {
     setForm(prev => ({
       ...prev,
@@ -190,8 +191,12 @@ function CreateReminder() {
     };
 
     const result = reminderSchema.safeParse(payload);
-
     if (!result.success) {
+      toast.showToast(
+        result.error.issues[0].message,
+        'error',
+        'Validation Error',
+      );
       const nextErrors: ReminderFormErrors = {};
 
       result.error.issues.forEach(issue => {
@@ -274,11 +279,11 @@ function CreateReminder() {
             startDate: form.startDate,
             reminderTime: form.reminderTime,
           }}
-          onChange={SetupSchdule}
+          onChange={handleFormChange}
         />
       )}
 
-      {/* {form.scheduleType === 'interval' && (
+      {form.scheduleType === 'interval' && (
         <IntervalSchedule
           value={{
             startDate: form.startDate,
@@ -290,7 +295,7 @@ function CreateReminder() {
           }}
           onChange={handleFormChange}
         />
-      )} */}
+      )}
 
       {/* 
       {scheduleType === 'daily' && (
