@@ -14,7 +14,7 @@ export type ReminderStatus =
   | 'completed'
   | 'missed';
 
-export type ReminderType =
+export type scheduleType =
   | 'once'
   | 'interval'
   | 'daily'
@@ -150,7 +150,7 @@ export interface ReminderOccurrenceResponse
 
 export interface ReminderFilters {
   categoryId?: ReminderCategory;
-  scheduleType?: ReminderType;
+  scheduleType?: scheduleType;
   active?: boolean;
   search?: string;
   page?: number;
@@ -220,7 +220,7 @@ export interface ReminderFormValues {
   description: string;
   categoryId: ReminderCategory;
 
-  scheduleType: ReminderType;
+  scheduleType: scheduleType;
 
   startDate: Date;
   endDate: Date | null;

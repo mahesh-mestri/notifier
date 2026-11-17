@@ -9,17 +9,17 @@ import {
 import { useTheme } from '@react-navigation/native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
 
-import type { ReminderType } from '../../types/reminder.types';
+import type { scheduleType } from '../../types/reminder.types';
 
 interface Props {
-  value: ReminderType;
-  onChange: (value: ReminderType) => void;
+  value: scheduleType;
+  onChange: (value: scheduleType) => void;
 }
 
 const TYPES: {
   label: string;
   description: string;
-  value: ReminderType;
+  value: scheduleType;
   icon: string;
   fullWidth?: boolean;
 }[] = [
@@ -56,7 +56,7 @@ const TYPES: {
   },
 ];
 
-function ReminderTypeSelector({ value, onChange }: Props) {
+function scheduleTypeSelector({ value, onChange }: Props) {
   const { colors } = useTheme();
 
   return (
@@ -174,4 +174,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default memo(ReminderTypeSelector);
+export default memo(scheduleTypeSelector);

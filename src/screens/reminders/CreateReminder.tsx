@@ -1,21 +1,19 @@
 
-import React, { memo, useCallback, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
+import React, { memo, useCallback, useState } from 'react';
+import { StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { FormSection, FieldError } from '../../components/ui/Field';
 
 import TextInput from '../../components/ui/TextInput';
 import Button from '../../components/ui/Button';
-import { CreateReminderRequest, Reminder, ReminderCategory as ReminderCategoryType, ReminderFormErrors, ReminderFormValues, ReminderSchedule, ReminderType } from '../../types/reminder.types';
-import ReminderCategory from '../../components/reminders/ReminderCategory';
+import { CreateReminderRequest, ReminderCategory, ReminderFormErrors, ReminderFormValues, ReminderSchedule, scheduleType } from '../../types/reminder.types';
+import ReminderCategoryComp from '../../components/reminders/ReminderCategory';
 import ReminderTypeSelector from '../../components/reminders/ReminderTypeSelector';
 import OneTimeSchedule from '../../components/reminders/schedule/OneTimeSchedule';
 import IntervalSchedule from '../../components/reminders/schedule/IntervalSchedule';
 import DailySchedule from '../../components/reminders/schedule/DailySchedule';
 import WeeklySchedule from '../../components/reminders/schedule/WeeklySchedule';
 import MonthlySchedule from '../../components/reminders/schedule/MonthlySchedule';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import ReminderDateTimeBottomSheet, { ReminderDateTimeBottomSheetRef, ReminderPickerField, ReminderPickerOptions } from '../../components/reminders/ReminderDateTimeBottomSheet';
 import { reminderSchema } from '../../schema/reminder.schema';
 import { format } from 'date-fns';
 import { useToast } from '../../providers/ToastProvider';
@@ -88,18 +86,29 @@ function CreateReminder() {
     }
   };
 
-  const handlerReminderTypeSelector = useCallback((value: ReminderType) => {
-    setForm(prev => ({
-      ...prev,
-      ...createDefaultValues(),
-      title: prev.title,
-      description: prev.description,
-      categoryId: prev.categoryId,
-      scheduleType: value,
-    }));
+const handleCategory = useCallback((value: ReminderCategory) => {
+  setForm(prev => ({
+    ...prev,
+    categoryId: value,
+  }));
+}, []);
 
-    setErrors({});
-  }, []);
+  const handlerReminderTypeSelector = useCallback(
+    (value: scheduleType) => {
+      console.warn("value in handlerReminderTypeSelector", value)
+      setForm(prev => ({
+        ...prev,
+        ...createDefaultValues(),
+        title: prev.title,
+        description: prev.description,
+        categoryId: prev.categoryId,
+        scheduleType: value,
+      }));
+
+      setErrors({});
+    },
+    [],
+  );
 
   const handleFormChange = <K extends keyof ReminderFormValues>(
     key: K,
@@ -256,9 +265,9 @@ function CreateReminder() {
       </FormSection>
 
       {/* category */}
-      <ReminderCategory
+      <ReminderCategoryComp
         value={form.categoryId}
-        onChange={handleDescriptionChange}
+        onChange={handleCategory}
       />
 
       {/* schdules */}
@@ -292,7 +301,7 @@ function CreateReminder() {
         />
       )}
 
-      
+
       {form.scheduleType === 'daily' && (
         <DailySchedule
           value={{
@@ -316,7 +325,7 @@ function CreateReminder() {
           onChange={handleFormChange}
         />
       )}
-       
+
 
       {form.scheduleType === 'monthly' && (
         <MonthlySchedule
