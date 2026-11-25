@@ -2715,7 +2715,7 @@ SPEC CHECKSUMS:
   RNFBMessaging: 1da4aaf65d7ebeb42d1a6aaae97199c917c20c13
   RNGestureHandler: e11840399a9e42f90b6a69699a5b232bddb417d5
   RNKeychain: f0c93f409b67268a02ca7959ae0ad783269586bd
-  RNPermissions: 7a50f584f46af712ad6c24ba1cb0c37bde5258ff
+  RNPermissions: 0c045c0bf898becd97ec47d2125b1e29116555a1
   RNReanimated: 5c641cc430b7255eae87c8039204eb0f816ea1b8
   RNScreens: fdca179295dcb421672af2a9e2979a9cebeda720
   RNWorklets: c05b04d721cccc1d44182425cd09efeddb6b1bbe

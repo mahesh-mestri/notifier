@@ -1,5 +1,4 @@
-
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import AppStack from './stacks/AppStack';
@@ -9,7 +8,7 @@ import AppLoader from '../components/ui/AppLoader';
 
 import { hiddenHeaderOptions } from '../utils/navigationHeaderOptions';
 import { RootStackParamList } from './types/navigation.types';
-import { onboardingStorage } from '../services/storage/onboardingStorage';
+import { isOnboardingCompleted } from '../services/storage/onboardingStorage';
 import { authStorage } from '../services/storage/authStorage';
 
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -17,6 +16,8 @@ import {
   selectIsAuthenticated,
   setAuthenticated,
 } from '../store/feature/auth/authSlice';
+
+type AuthInitialRoute = 'Onboarding' | 'Signin';
 
 type StartupState = {
   isLoading: boolean;
@@ -39,22 +40,23 @@ function RootNavigator() {
 
     const initializeApp = async () => {
       try {
-        const [hasCompletedOnboarding, accessToken] =
-          await Promise.all([
-            onboardingStorage.isCompleted(),
-            authStorage.getAccessToken(),
-          ]);
+        const [hasCompletedOnboarding, accessToken] = await Promise.all([
+          isOnboardingCompleted(),
+          authStorage.getAccessToken(),
+        ]);
 
-        if (isMounted) {
-          if (accessToken) {
-            dispatch(setAuthenticated(accessToken));
-          }
-
-          setStartup({
-            isLoading: false,
-            hasCompletedOnboarding,
-          });
+        if (!isMounted) {
+          return;
         }
+
+        if (accessToken) {
+          dispatch(setAuthenticated(accessToken));
+        }
+
+        setStartup({
+          isLoading: false,
+          hasCompletedOnboarding,
+        });
       } catch (error) {
         console.error('App initialization failed:', error);
 
@@ -74,21 +76,21 @@ function RootNavigator() {
     };
   }, [dispatch]);
 
+  const initialAuthRoute: AuthInitialRoute = startup.hasCompletedOnboarding
+    ? 'Signin'
+    : 'Onboarding';
+
+  const renderAuthStack = useCallback(
+    () => <AuthStack initialRouteName={initialAuthRoute} />,
+    [initialAuthRoute],
+  );
+
   if (startup.isLoading) {
     return <AppLoader />;
   }
 
-  const initialAuthRoute = startup.hasCompletedOnboarding
-    ? 'Signin'
-    : 'Onboarding';
-
   return (
-    <Stack.Navigator
-      screenOptions={hiddenHeaderOptions}
-      initialRouteName={
-        isAuthenticated ? 'AppStack' : 'AuthStack'
-      }
-    >
+    <Stack.Navigator screenOptions={hiddenHeaderOptions}>
       {isAuthenticated ? (
         <Stack.Screen
           name="AppStack"
@@ -96,9 +98,7 @@ function RootNavigator() {
         />
       ) : (
         <Stack.Screen name="AuthStack">
-          {() => (
-            <AuthStack initialRouteName={initialAuthRoute} />
-          )}
+          {renderAuthStack}
         </Stack.Screen>
       )}
     </Stack.Navigator>

@@ -8,11 +8,10 @@ export const saveFcmTokenApi = async (token: string): Promise<void> => {
         platform: isIOS ? 'IOS' : 'ANDROID',
     };
 
-    await api.post('/v1/devices', payload);
+    await api.post('/v1/devices/register', payload);
 };
 
 export const removeFcmTokenApi = async (token: string): Promise<void> => {
-    await api.delete('/v1/devices', {
-        data: { token },
+    await api.delete(`/v1/devices/${token}`, {
     });
 };

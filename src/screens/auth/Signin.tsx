@@ -1,5 +1,5 @@
 
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 
 import {
   View,
@@ -32,11 +32,12 @@ import { signinSchema } from '../../schema/auth.schema';
 
 import { useToast } from '../../providers/ToastProvider';
 import { isIOS } from '../../utils/os';
+import { syncFcmToken } from '../../store/feature/reminder/fcmSlice';
+import { getFcmToken, requestNotificationPermission } from '../../services/firebase/messaging';
 
 function Signin({ navigation }: SigninScreenProps) {
   const { colors } = useTheme();
   const { showToast } = useToast();
-
   const dispatch = useAppDispatch();
 
   const isSubmitting = useAppSelector(selectAuthLoading);
@@ -82,12 +83,24 @@ function Signin({ navigation }: SigninScreenProps) {
 
     try {
       await dispatch(login(result.data)).unwrap();
-
       showToast(
         'Welcome back!',
         'success',
         'Login successful',
       );
+
+      try {
+        const fcmToken = await getFcmToken();
+        console.log('FCM token after login:', fcmToken);
+
+        if (fcmToken) {
+          await dispatch(syncFcmToken(fcmToken)).unwrap();
+        }
+      } catch (fcmError) {
+        if (__DEV__) {
+          console.warn('FCM token fetch/sync after login failed:', fcmError);
+        }
+      }
     } catch (error) {
       showToast(
         'Login unsuccessful!',
@@ -98,6 +111,7 @@ function Signin({ navigation }: SigninScreenProps) {
       console.error('Signin failed:', error);
     }
   };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView

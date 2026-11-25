@@ -1,53 +1,112 @@
+import { getApp } from '@react-native-firebase/app';
 import {
+  AuthorizationStatus,
+  getInitialNotification,
   getMessaging,
   getToken,
+  hasPermission,
+  isDeviceRegisteredForRemoteMessages,
+  onNotificationOpenedApp,
+  registerDeviceForRemoteMessages,
+  requestPermission,
+  type RemoteMessage,
 } from '@react-native-firebase/messaging';
-import {
-  checkNotifications,
-  requestNotifications,
-  RESULTS,
-} from 'react-native-permissions';
 
-const messagingInstance = getMessaging();
+type FirebaseAuthorizationStatus =
+  (typeof AuthorizationStatus)[keyof typeof AuthorizationStatus];
 
-export const checkNotificationPermission = async (): Promise<boolean> => {
+const getMessagingInstance = () => getMessaging(getApp());
+
+const isAuthorized = (status: FirebaseAuthorizationStatus): boolean =>
+  status === AuthorizationStatus.AUTHORIZED ||
+  status === AuthorizationStatus.PROVISIONAL;
+
+export async function checkNotificationPermission(): Promise<boolean> {
   try {
-    const { status } = await checkNotifications();
-    return status === RESULTS.GRANTED || status === RESULTS.LIMITED;
+    const status = await hasPermission(getMessagingInstance());
+    return isAuthorized(status);
   } catch (error) {
     if (__DEV__) {
-      console.warn('Error checking notification permission:', error);
+      console.warn('[Messaging] Error checking notification permission:', error);
     }
     return false;
   }
-};
+}
 
-export const requestNotificationPermission = async (): Promise<boolean> => {
+export async function requestNotificationPermission(): Promise<boolean> {
   try {
-    const { status } = await requestNotifications(['alert', 'badge', 'sound']);
-    return status === RESULTS.GRANTED || status === RESULTS.LIMITED;
+    const status = await requestPermission(getMessagingInstance());
+    return isAuthorized(status);
   } catch (error) {
     if (__DEV__) {
-      console.warn('Error requesting notification permission:', error);
+      console.warn('[Messaging] Error requesting notification permission:', error);
     }
     return false;
   }
-};
+}
 
-export const getFcmToken = async (): Promise<string | null> => {
+export async function getFcmToken(
+  requestIfMissing = false,
+): Promise<string | null> {
   try {
-    // Kept on getToken() while backend targets FCM device registration tokens (FID opt-in disabled)
-    const token = await getToken(messagingInstance);
+    let allowed = await checkNotificationPermission();
 
-    if (__DEV__) {
-      console.log('FCM Token:', token);
+    if (!allowed && requestIfMissing) {
+      allowed = await requestNotificationPermission();
     }
 
+    if (!allowed) {
+      return null;
+    }
+
+    const messaging = getMessagingInstance();
+
+    // if (Platform.OS === 'ios') {
+    //   try {
+    //     if (!isDeviceRegisteredForRemoteMessages(messaging)) {
+    //       await registerDeviceForRemoteMessages(messaging);
+    //     }
+    //   } catch (iosRegisterError) {
+    //     // Expected during development on a free Apple Personal Team without APNs capability.
+    //     if (__DEV__) {
+    //       console.info(
+    //         '[Messaging] iOS APNs registration skipped/unavailable in current signing setup:',
+    //         iosRegisterError,
+    //       );
+    //     }
+    //     return null;
+    //   }
+    // }
+
+    const token = await getToken(messaging);
     return token || null;
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
     if (__DEV__) {
-      console.warn('Error fetching FCM token:', error);
+      console.warn(
+        '[Messaging] Unable to retrieve FCM token:',
+        err?.code ?? 'no-code',
+        err?.message ?? error,
+      );
     }
     return null;
   }
-};
+}
+
+export function registerNotificationOpenListeners(
+  onOpen: (remoteMessage: RemoteMessage) => void,
+): () => void {
+  const messaging = getMessagingInstance();
+
+  getInitialNotification(messaging).then((remoteMessage) => {
+    if (remoteMessage) {
+      onOpen(remoteMessage);
+    }
+  });
+
+  return onNotificationOpenedApp(messaging, (remoteMessage) => {
+    if (remoteMessage) {
+      onOpen(remoteMessage);
+    }
+  });
+}

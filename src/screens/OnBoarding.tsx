@@ -1,4 +1,3 @@
-
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,10 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '@react-navigation/native';
 
-import * as Keychain from 'react-native-keychain';
-
 import { AuthStackParamList } from '../navigation/types/navigation.types';
 import Button from '../components/ui/Button';
+import { requestNotificationPermission } from '../services/firebase/messaging';
+import {
+  isOnboardingCompleted,
+  setOnboardingCompleted,
+} from '../services/storage/onboardingStorage';
 
 import NeverMissThing from '../components/onboarding/NeverMissThing';
 import RemindersOnTime from '../components/onboarding/RemindersOnTime';
@@ -30,8 +32,6 @@ type OnboardingSlide = {
   id: string;
   component: React.ComponentType;
 };
-
-const ONBOARDING_SERVICE = 'com.notifier.onboarding';
 
 const onboardingSlides: OnboardingSlide[] = [
   {
@@ -66,12 +66,7 @@ function Onboarding({ navigation }: Props) {
 
     const checkOnboardingStatus = async () => {
       try {
-        const credentials = await Keychain.getGenericPassword({
-          service: ONBOARDING_SERVICE,
-        });
-
-        const completed =
-          credentials !== false && credentials.password === 'completed';
+        const completed = await isOnboardingCompleted();
 
         if (completed && isMounted) {
           navigation.replace('Signin');
@@ -94,32 +89,39 @@ function Onboarding({ navigation }: Props) {
   }, [navigation]);
 
   // Save onboarding completion before navigating to Signin.
-  const completeOnboarding = useCallback(async () => {
-    if (isCompleting) {
-      return;
-    }
+  const completeOnboarding = useCallback(
+    async ({ requestPermissionOnFinish = false } = {}) => {
+      if (isCompleting) {
+        return;
+      }
 
-    try {
-      setIsCompleting(true);
+      try {
+        setIsCompleting(true);
 
-      await Keychain.setGenericPassword(
-        'onboarding',
-        'completed',
-        {
-          service: ONBOARDING_SERVICE,
-        },
-      );
+        if (requestPermissionOnFinish) {
+          const granted = await requestNotificationPermission();
+          if (__DEV__) {
+            console.log('[Onboarding] Notification permission granted:', granted);
+          }
+        }
 
-      navigation.replace('Signin');
-    } catch (error) {
-      console.error('Failed to save onboarding status:', error);
-      setIsCompleting(false);
-    }
-  }, [isCompleting, navigation]);
+        const saved = await setOnboardingCompleted(true);
+        if (!saved) {
+          throw new Error('AsyncStorage failed to persist onboarding status');
+        }
+
+        navigation.replace('Signin');
+      } catch (error) {
+        console.error('Failed to save onboarding status:', error);
+        setIsCompleting(false);
+      }
+    },
+    [isCompleting, navigation],
+  );
 
   const handleNext = useCallback(() => {
     if (isLastSlide) {
-      completeOnboarding();
+      completeOnboarding({ requestPermissionOnFinish: true });
       return;
     }
 
@@ -130,7 +132,7 @@ function Onboarding({ navigation }: Props) {
   }, [completeOnboarding, currentIndex, isLastSlide]);
 
   const handleSkip = useCallback(() => {
-    completeOnboarding();
+    completeOnboarding({ requestPermissionOnFinish: false });
   }, [completeOnboarding]);
 
   const handleScroll = useCallback(
