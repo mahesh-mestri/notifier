@@ -23,10 +23,10 @@ const CATEGORIES: {
     value: ReminderCategoryType;
     icon: string;
 }[] = [
-        { label: 'Personal', value: 'personal', icon: 'account-outline' },
-        { label: 'Work', value: 'work', icon: 'briefcase-outline' },
-        { label: 'Health', value: 'health', icon: 'heart-pulse' },
-        { label: 'Other', value: 'other', icon: 'dots-horizontal' },
+        { label: 'Personal', value: 'PERSONAL', icon: 'account-outline' },
+        { label: 'Work', value: 'WORK', icon: 'briefcase-outline' },
+        { label: 'Health', value: 'HEALTH', icon: 'heart-pulse' },
+        { label: 'Other', value: 'OTHER', icon: 'dots-horizontal' },
     ];
 
 function ReminderCategory({ value, onChange }: Props) {

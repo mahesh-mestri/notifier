@@ -1,10 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './feature/auth/authSlice'
-
+import reminderReducer from './feature/reminder/reminderSlice'
+import fcmReducer from './feature/reminder/fcmSlice'
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer
+    auth: authReducer,
+    reminder: reminderReducer,
+    fcm: fcmReducer
   }
 })
 

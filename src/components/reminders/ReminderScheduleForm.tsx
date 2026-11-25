@@ -54,47 +54,47 @@ interface Props {
     onPickDate: ScheduleFieldsProps['onPickDate'];
 }
 
-export default function ReminderScheduleForm({
-    value,
-    onChange,
-    onPickDate,
-}: Props) {
-    const update = (changes: Partial<ReminderScheduleValue>) => {
-        onChange({ ...value, ...changes });
-    };
+// export default function ReminderScheduleForm({
+//     value,
+//     onChange,
+//     onPickDate,
+// }: Props) {
+//     const update = (changes: Partial<ReminderScheduleValue>) => {
+//         onChange({ ...value, ...changes });
+//     };
 
-    const fieldProps: ScheduleFieldsProps = {
-        value,
-        onChange: update,
-        onPickDate,
-    };
+//     const fieldProps: ScheduleFieldsProps = {
+//         value,
+//         onChange: update,
+//         onPickDate,
+//     };
 
-    return (
-        <View>
-            <ReminderTypeSelector
-                value={value.type}
-                onChange={type => update({ type })}
-            />
+//     return (
+//         <View>
+//             <ReminderTypeSelector
+//                 value={value.type}
+//                 onChange={type => update({ type })}
+//             />
 
-            {value.type === 'once' && (
-                <OneTimeSchedule {...fieldProps} />
-            )}
+//             {value.type === 'once' && (
+//                 <OneTimeSchedule {...fieldProps} />
+//             )}
 
-            {value.type === 'interval' && (
-                <IntervalSchedule {...fieldProps} />
-            )}
+//             {value.type === 'interval' && (
+//                 <IntervalSchedule {...fieldProps} />
+//             )}
 
-            {value.type === 'daily' && (
-                <DailySchedule {...fieldProps} />
-            )}
+//             {value.type === 'daily' && (
+//                 <DailySchedule {...fieldProps} />
+//             )}
 
-            {value.type === 'weekly' && (
-                <WeeklySchedule {...fieldProps} />
-            )}
+//             {value.type === 'weekly' && (
+//                 <WeeklySchedule {...fieldProps} />
+//             )}
 
-            {value.type === 'monthly' && (
-                <MonthlySchedule {...fieldProps} />
-            )}
-        </View>
-    );
-}
+//             {value.type === 'monthly' && (
+//                 <MonthlySchedule {...fieldProps} />
+//             )}
+//         </View>
+//     );
+// }

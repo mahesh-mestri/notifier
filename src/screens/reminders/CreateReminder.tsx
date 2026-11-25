@@ -1,12 +1,19 @@
-
 import React, { memo, useCallback, useState } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import { FormSection, FieldError } from '../../components/ui/Field';
+import { format } from 'date-fns';
 
+import { FormSection, FieldError } from '../../components/ui/Field';
 import TextInput from '../../components/ui/TextInput';
 import Button from '../../components/ui/Button';
-import { CreateReminderRequest, ReminderCategory, ReminderFormErrors, ReminderFormValues, ReminderSchedule, scheduleType } from '../../types/reminder.types';
+import {
+  CreateReminderRequest,
+  ReminderCategory,
+  ReminderFormErrors,
+  ReminderFormValues,
+  ReminderSchedule,
+  scheduleType,
+} from '../../types/reminder.types';
 import ReminderCategoryComp from '../../components/reminders/ReminderCategory';
 import ReminderTypeSelector from '../../components/reminders/ReminderTypeSelector';
 import OneTimeSchedule from '../../components/reminders/schedule/OneTimeSchedule';
@@ -15,32 +22,28 @@ import DailySchedule from '../../components/reminders/schedule/DailySchedule';
 import WeeklySchedule from '../../components/reminders/schedule/WeeklySchedule';
 import MonthlySchedule from '../../components/reminders/schedule/MonthlySchedule';
 import { reminderSchema } from '../../schema/reminder.schema';
-import { format } from 'date-fns';
 import { useToast } from '../../providers/ToastProvider';
-
-interface FormErrors {
-  title?: string;
-  description?: string;
-}
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  createReminder,
+  clearReminderError,
+  selectReminderLoading,
+} from '../../store/feature/reminder/reminderSlice';
 
 const createDefaultValues = (): ReminderFormValues => ({
   title: '',
   description: '',
-  categoryId: 'personal',
+  categoryId: 'PERSONAL',
 
-  scheduleType: 'once',
+  scheduleType: 'ONCE',
 
   startDate: new Date(),
   endDate: null,
 
-  reminderTime: (() => {
-    const date = new Date();
-    date.setHours(9, 0, 0, 0);
-    return date;
-  })(),
+  reminderTime: new Date(),
 
   intervalValue: 30,
-  intervalUnit: 'minutes',
+  intervalUnit: 'MINUTES',
 
   windowStartTime: (() => {
     const date = new Date();
@@ -64,38 +67,43 @@ const createDefaultValues = (): ReminderFormValues => ({
 function CreateReminder() {
   const { colors } = useTheme();
   const toast = useToast();
+  const dispatch = useAppDispatch();
+  const isSubmitting = useAppSelector(selectReminderLoading);
+
   const [form, setForm] = useState<ReminderFormValues>(
     createDefaultValues(),
   );
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<ReminderFormErrors>({});
+
+  const clearErrorField = (field: keyof ReminderFormErrors) => {
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   const handleTitleChange = (value: string) => {
     setForm(prev => ({ ...prev, title: value }));
-
-    if (errors.title) {
-      setErrors(prev => ({ ...prev, title: undefined }));
-    }
+    clearErrorField('title');
   };
 
   const handleDescriptionChange = (value: string) => {
     setForm(prev => ({ ...prev, description: value }));
-
-    if (errors.description) {
-      setErrors(prev => ({ ...prev, description: undefined }));
-    }
+    clearErrorField('description');
   };
 
-const handleCategory = useCallback((value: ReminderCategory) => {
-  setForm(prev => ({
-    ...prev,
-    categoryId: value,
-  }));
-}, []);
+  const handleCategory = useCallback((value: ReminderCategory) => {
+    setForm(prev => ({
+      ...prev,
+      categoryId: value,
+    }));
+  }, []);
 
   const handlerReminderTypeSelector = useCallback(
     (value: scheduleType) => {
-      console.warn("value in handlerReminderTypeSelector", value)
+      if (__DEV__) {
+        console.warn('value in handlerReminderTypeSelector', value);
+      }
       setForm(prev => ({
         ...prev,
         ...createDefaultValues(),
@@ -118,24 +126,23 @@ const handleCategory = useCallback((value: ReminderCategory) => {
       ...prev,
       [key]: value,
     }));
+    clearErrorField('schedule');
   };
-
 
   const buildSchedulePayload = (): ReminderSchedule => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
     switch (form.scheduleType) {
-      case 'once':
+      case 'ONCE':
         return {
-          type: 'once',
-          date: format(form.startDate, 'yyyy-MM-dd'),
-          time: format(form.reminderTime, 'HH:mm'),
+          type: form.scheduleType,
+          reminderDate: format(form.startDate, 'yyyy-MM-dd'),
+          reminderTime: format(form.reminderTime, 'HH:mm'),
           timeZone,
         };
 
-      case 'interval':
+      case 'INTERVAL':
         return {
-          type: 'interval',
+          type: form.scheduleType,
           startDate: format(form.startDate, 'yyyy-MM-dd'),
           endDate: form.endDate
             ? format(form.endDate, 'yyyy-MM-dd')
@@ -147,71 +154,73 @@ const handleCategory = useCallback((value: ReminderCategory) => {
           timeZone,
         };
 
-      case 'daily':
+      case 'DAILY':
         return {
-          type: 'daily',
+          type: form.scheduleType,
           startDate: format(form.startDate, 'yyyy-MM-dd'),
           endDate: form.endDate
             ? format(form.endDate, 'yyyy-MM-dd')
             : undefined,
-          time: format(form.reminderTime, 'HH:mm'),
           timeZone,
+          reminderTime: format(form.reminderTime, 'HH:mm:ss'),
         };
 
-      case 'weekly':
+      case 'WEEKLY':
         return {
-          type: 'weekly',
+          type: form.scheduleType,
           startDate: format(form.startDate, 'yyyy-MM-dd'),
           endDate: form.endDate
             ? format(form.endDate, 'yyyy-MM-dd')
             : undefined,
-          time: format(form.reminderTime, 'HH:mm'),
+          reminderTime: format(form.reminderTime, 'HH:mm'),
           weekdays: form.selectedWeekdays,
           timeZone,
         };
 
-      case 'monthly':
+      case 'MONTHLY':
         return {
-          type: 'monthly',
+          type: form.scheduleType,
           startDate: format(form.startDate, 'yyyy-MM-dd'),
           endDate: form.endDate
             ? format(form.endDate, 'yyyy-MM-dd')
             : undefined,
-          time: format(form.reminderTime, 'HH:mm'),
+          reminderTime: format(form.reminderTime, 'HH:mm'),
           dayOfMonth: form.dayOfMonth,
           timeZone,
         };
     }
   };
 
+  const _createReminder = async () => {
+    if (isSubmitting) return;
 
-  const _createReminder = () => {
+    const schedule = buildSchedulePayload();
+
     const payload: CreateReminderRequest = {
       title: form.title.trim(),
       description: form.description.trim(),
       categoryId: form.categoryId,
-      schedule: buildSchedulePayload(),
+      scheduleType: schedule.type,
+      schedule,
       notificationEnabled: form.notificationEnabled,
     };
 
     const result = reminderSchema.safeParse(payload);
+    console.warn("result after safeparse: ", result)
     if (!result.success) {
       toast.showToast(
         result.error.issues[0].message,
         'error',
         'Validation Error',
       );
-      const nextErrors: ReminderFormErrors = {};
 
+      const nextErrors: ReminderFormErrors = {};
       result.error.issues.forEach(issue => {
         const field = issue.path[0];
 
-        if (
-          field === 'title' ||
-          field === 'description'
-        ) {
+        if (field === 'title' || field === 'description') {
           nextErrors[field] = issue.message;
-        } else if (field === 'schedule') {
+        } else if (field === 'schedule' || field === 'scheduleType') {
           nextErrors.schedule = issue.message;
         }
       });
@@ -221,17 +230,39 @@ const handleCategory = useCallback((value: ReminderCategory) => {
     }
 
     setErrors({});
+    dispatch(clearReminderError());
 
-    console.log('Validated Payload:', result.data);
+    try {
+      if (__DEV__) {
+        console.log('Submitting reminder payload:', result.data);
+      }
 
-    // Next: Call create reminder API
+      await dispatch(createReminder(result.data)).unwrap();
+
+      toast.showToast(
+        'Reminder created successfully!',
+        'success',
+        'Reminder Saved',
+      );
+
+      setForm(createDefaultValues());
+    } catch (error) {
+      console.warn('error: ', error);
+      toast.showToast(
+        typeof error === 'string'
+          ? error
+          : 'Could not create reminder',
+        'error',
+        'Creation Failed',
+      );
+    }
   };
-
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior='always'
-      contentContainerStyle={[styles.container, styles.p12]} >
+      contentInsetAdjustmentBehavior="always"
+      contentContainerStyle={[styles.container, styles.p12]}
+    >
       {/* Reminder Title */}
       <FormSection title="Reminder Title">
         <TextInput
@@ -248,9 +279,7 @@ const handleCategory = useCallback((value: ReminderCategory) => {
       {/* Description */}
       <FormSection title="Description (Optional)">
         <TextInput
-          style={[
-            styles.descriptionInput,
-          ]}
+          style={[styles.descriptionInput]}
           placeholder="Add more details..."
           placeholderTextColor={colors.text}
           value={form.description}
@@ -270,14 +299,14 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         onChange={handleCategory}
       />
 
-      {/* schdules */}
+      {/* schedules */}
       <ReminderTypeSelector
         value={form.scheduleType}
         onChange={handlerReminderTypeSelector}
       />
 
       {/* Schedule Configuration */}
-      {form.scheduleType === 'once' && (
+      {form.scheduleType === 'ONCE' && (
         <OneTimeSchedule
           value={{
             startDate: form.startDate,
@@ -287,7 +316,7 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         />
       )}
 
-      {form.scheduleType === 'interval' && (
+      {form.scheduleType === 'INTERVAL' && (
         <IntervalSchedule
           value={{
             startDate: form.startDate,
@@ -301,8 +330,7 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         />
       )}
 
-
-      {form.scheduleType === 'daily' && (
+      {form.scheduleType === 'DAILY' && (
         <DailySchedule
           value={{
             startDate: form.startDate,
@@ -313,8 +341,7 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         />
       )}
 
-
-      {form.scheduleType === 'weekly' && (
+      {form.scheduleType === 'WEEKLY' && (
         <WeeklySchedule
           value={{
             startDate: form.startDate,
@@ -326,8 +353,7 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         />
       )}
 
-
-      {form.scheduleType === 'monthly' && (
+      {form.scheduleType === 'MONTHLY' && (
         <MonthlySchedule
           value={{
             startDate: form.startDate,
@@ -339,14 +365,16 @@ const handleCategory = useCallback((value: ReminderCategory) => {
         />
       )}
 
+      <FieldError message={errors.schedule} />
 
       <Button
         onPress={_createReminder}
+        loading={isSubmitting}
+        disabled={isSubmitting}
       >
         Create Reminder
       </Button>
     </ScrollView>
-
   );
 }
 
@@ -359,8 +387,8 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   p12: {
-    padding: 12
-  }
+    padding: 12,
+  },
 });
 
 export default memo(CreateReminder);

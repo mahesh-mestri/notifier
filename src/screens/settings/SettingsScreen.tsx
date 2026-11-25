@@ -19,10 +19,13 @@ import {
   saveNotificationSettings,
   type NotificationSettings,
 } from '../../services/settings';
+import { useAppDispatch } from '../../store/hooks';
+import { logoutUser } from '../../store/feature/auth/authSlice';
 
 
 export default function SettingsScreen({ navigation }: any) {
   const { colors, dark } = useTheme();
+  const dispatch = useAppDispatch();
 
   const [settings, setSettings] = useState<NotificationSettings>(
     defaultNotificationSettings,
@@ -128,16 +131,17 @@ export default function SettingsScreen({ navigation }: any) {
         {
           text: 'Sign Out',
           style: 'destructive',
-          onPress: () => {
-            // TODO:
-            // Clear the authentication session and reset
-            // navigation to the AuthStack.
+          onPress: async () => {
+            try {
+              await dispatch(logoutUser()).unwrap();
+            } catch (error) {
+              console.error('Sign out failed:', error);
+            }
           },
         },
       ],
     );
   };
-
   const openPrivacy = () => navigation.navigate('PrivacySecurity');
   const openBackup = () => navigation.navigate('DataBackup');
   const openSupport = () => navigation.navigate('HelpSupport');

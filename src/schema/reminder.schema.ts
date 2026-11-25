@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import {
   format,
@@ -7,13 +6,17 @@ import {
   parse,
   startOfDay,
 } from 'date-fns';
+import { Weekday } from '../types/reminder.types';
 
 /* ----------------------------------
    Common validation
 ----------------------------------- */
 
-const dateSchema = z.string().refine((value) => {
-  const date = parse(value, 'yyyy-MM-dd', new Date());
+const parseIsoDate = (value: string) =>
+  parse(value, 'yyyy-MM-dd', new Date());
+
+const dateSchema = z.string().refine(value => {
+  const date = parseIsoDate(value);
 
   return (
     isValid(date) &&
@@ -22,14 +25,14 @@ const dateSchema = z.string().refine((value) => {
 }, 'Please select a valid date');
 
 const timeSchema = z.string().regex(
-  /^([01]\d|2[0-3]):([0-5]\d)$/,
-  'Please enter a valid time (HH:mm)',
+  /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/,
+  'Please enter a valid time (HH:mm or HH:mm:ss)',
 );
 
 const timeZoneSchema = z.string()
   .trim()
   .min(1, 'Timezone is required')
-  .refine((value) => {
+  .refine(value => {
     try {
       new Intl.DateTimeFormat('en-US', {
         timeZone: value,
@@ -42,16 +45,13 @@ const timeZoneSchema = z.string()
 
 const optionalEndDateSchema = dateSchema.optional();
 
-const isPastDate = (value: string) => {
-  const date = parse(value, 'yyyy-MM-dd', new Date());
-
-  return isBefore(startOfDay(date), startOfDay(new Date()));
-};
+const isPastDate = (value: string) =>
+  isBefore(startOfDay(parseIsoDate(value)), startOfDay(new Date()));
 
 const isEndDateBeforeStartDate = (
   endDate: string,
   startDate: string,
-) => endDate < startDate;
+) => isBefore(parseIsoDate(endDate), parseIsoDate(startDate));
 
 /* ----------------------------------
    Schedule schemas
@@ -59,15 +59,15 @@ const isEndDateBeforeStartDate = (
 
 // Once
 const onceScheduleSchema = z.object({
-  type: z.literal('once'),
-  date: dateSchema,
-  time: timeSchema,
+  type: z.literal('ONCE'),
+  reminderDate: dateSchema,
+  reminderTime: timeSchema,
   timeZone: timeZoneSchema,
 }).superRefine((data, ctx) => {
-  if (isPastDate(data.date)) {
+  if (isPastDate(data.reminderDate)) {
     ctx.addIssue({
       code: 'custom',
-      path: ['date'],
+      path: ['reminderDate'],
       message: 'Date cannot be in the past',
     });
   }
@@ -75,12 +75,12 @@ const onceScheduleSchema = z.object({
 
 // Interval
 const intervalScheduleSchema = z.object({
-  type: z.literal('interval'),
+  type: z.literal('INTERVAL'),
   startDate: dateSchema,
   intervalValue: z.number()
     .int('Interval must be a whole number')
     .min(1, 'Interval must be at least 1'),
-  intervalUnit: z.enum(['minutes', 'hours']),
+  intervalUnit: z.enum(['MINUTES', 'HOURS']),
   windowStartTime: timeSchema,
   windowEndTime: timeSchema,
   endDate: optionalEndDateSchema,
@@ -114,7 +114,7 @@ const intervalScheduleSchema = z.object({
   }
 
   const intervalInMinutes =
-    data.intervalUnit === 'hours'
+    data.intervalUnit === 'HOURS'
       ? data.intervalValue * 60
       : data.intervalValue;
 
@@ -129,9 +129,9 @@ const intervalScheduleSchema = z.object({
 
 // Daily
 const dailyScheduleSchema = z.object({
-  type: z.literal('daily'),
+  type: z.literal('DAILY'),
   startDate: dateSchema,
-  time: timeSchema,
+  reminderTime: timeSchema,
   endDate: optionalEndDateSchema,
   timeZone: timeZoneSchema,
 }).superRefine((data, ctx) => {
@@ -151,44 +151,56 @@ const dailyScheduleSchema = z.object({
     });
   }
 });
+
+const weekdaySchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(6)
+  .transform(day => day as Weekday);
 
 // Weekly
-const weeklyScheduleSchema = z.object({
-  type: z.literal('weekly'),
-  startDate: dateSchema,
-  time: timeSchema,
-  weekdays: z.array(
-    z.number().int().min(0).max(6),
-  ).min(1, 'Select at least one weekday')
-    .refine(
-      (days) => new Set(days).size === days.length,
-      'Duplicate weekdays are not allowed',
-    ),
-  endDate: optionalEndDateSchema,
-  timeZone: timeZoneSchema,
-}).superRefine((data, ctx) => {
-  if (data.endDate && isEndDateBeforeStartDate(data.endDate, data.startDate)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['endDate'],
-      message: 'End date must be after or equal to start date',
-    });
-  }
+const weeklyScheduleSchema = z
+  .object({
+    type: z.literal('WEEKLY'),
+    startDate: dateSchema,
+    reminderTime: timeSchema,
+    weekdays: z
+      .array(weekdaySchema)
+      .min(1, 'Select at least one weekday')
+      .refine(
+        days => new Set(days).size === days.length,
+        'Duplicate weekdays are not allowed',
+      ),
+    endDate: optionalEndDateSchema,
+    timeZone: timeZoneSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.endDate &&
+      isEndDateBeforeStartDate(data.endDate, data.startDate)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['endDate'],
+        message: 'End date must be after or equal to start date',
+      });
+    }
 
-  if (isPastDate(data.startDate)) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['startDate'],
-      message: 'Start date cannot be in the past',
-    });
-  }
-});
+    if (isPastDate(data.startDate)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['startDate'],
+        message: 'Start date cannot be in the past',
+      });
+    }
+  });
 
 // Monthly
 const monthlyScheduleSchema = z.object({
-  type: z.literal('monthly'),
+  type: z.literal('MONTHLY'),
   startDate: dateSchema,
-  time: timeSchema,
+  reminderTime: timeSchema,
   dayOfMonth: z.number()
     .int('Day must be a whole number')
     .min(1, 'Day must be between 1 and 31')
@@ -212,7 +224,6 @@ const monthlyScheduleSchema = z.object({
     });
   }
 });
-
 /* ----------------------------------
    Discriminated schedule union
 ----------------------------------- */
@@ -229,40 +240,65 @@ export const reminderScheduleSchema = z.discriminatedUnion(
 );
 
 /* ----------------------------------
+   Schedule type schema
+----------------------------------- */
+
+export const scheduleTypeSchema = z.enum([
+  'ONCE',
+  'INTERVAL',
+  'DAILY',
+  'WEEKLY',
+  'MONTHLY',
+]);
+
+/* ----------------------------------
    Reminder schema
 ----------------------------------- */
 
-export const reminderSchema = z.object({
-  title: z.string()
-    .trim()
-    .min(1, 'Reminder title is required')
-    .max(100, 'Title cannot exceed 100 characters'),
+export const reminderSchema = z
+  .object({
+    title: z.string()
+      .trim()
+      .min(1, 'Reminder title is required')
+      .max(100, 'Title cannot exceed 100 characters'),
 
-  description: z
-    .string()
-    .trim()
-    .refine(
-      value => value.length === 0 || (value.length >= 5 && value.length <= 10),
-      {
-        message: 'Description must be empty or contain atleast 5-10 characters',
-      },
-    ),
+    description: z
+      .string()
+      .trim()
+      .max(500, 'Description cannot exceed 500 characters')
+      .optional()
+      .transform(value => (value && value.length > 0 ? value : undefined)),
 
-  categoryId: z.enum([
-    'personal',
-    'work',
-    'health',
-    'other',
-  ]),
+    categoryId: z.enum([
+      'PERSONAL',
+      'WORK',
+      'HEALTH',
+      'OTHER',
+    ]),
 
-  schedule: reminderScheduleSchema,
+    scheduleType: scheduleTypeSchema,
 
-  notificationEnabled: z.boolean(),
-});
+    schedule: reminderScheduleSchema,
+
+    notificationEnabled: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.scheduleType !== data.schedule.type) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['scheduleType'],
+        message: 'Schedule type must match the selected schedule',
+      });
+    }
+  });
 
 /* ----------------------------------
    Inferred types
 ----------------------------------- */
+
+export type ScheduleTypeFormData = z.infer<
+  typeof scheduleTypeSchema
+>;
 
 export type ReminderScheduleFormData = z.infer<
   typeof reminderScheduleSchema

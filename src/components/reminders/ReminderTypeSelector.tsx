@@ -23,38 +23,38 @@ const TYPES: {
   icon: string;
   fullWidth?: boolean;
 }[] = [
-  {
-    label: 'Once',
-    description: 'One-time reminder',
-    value: 'once',
-    icon: 'calendar-check-outline',
-  },
-  {
-    label: 'At intervals',
-    description: 'Every few minutes or hours',
-    value: 'interval',
-    icon: 'repeat',
-  },
-  {
-    label: 'Every day',
-    description: 'Daily at a specific time',
-    value: 'daily',
-    icon: 'weather-sunny',
-  },
-  {
-    label: 'Every week',
-    description: 'Choose specific weekdays',
-    value: 'weekly',
-    icon: 'calendar-week',
-  },
-  {
-    label: 'Every month',
-    description: 'Choose a day of the month',
-    value: 'monthly',
-    icon: 'calendar-month',
-    fullWidth: true,
-  },
-];
+    {
+      label: 'Once',
+      description: 'One-time reminder',
+      value: 'ONCE',
+      icon: 'calendar-check-outline',
+    },
+    {
+      label: 'At intervals',
+      description: 'Every few minutes or hours',
+      value: 'INTERVAL',
+      icon: 'repeat',
+    },
+    {
+      label: 'Every day',
+      description: 'Daily at a specific time',
+      value: 'DAILY',
+      icon: 'weather-sunny',
+    },
+    {
+      label: 'Every week',
+      description: 'Choose specific weekdays',
+      value: 'WEEKLY',
+      icon: 'calendar-week',
+    },
+    {
+      label: 'Every month',
+      description: 'Choose a day of the month',
+      value: 'MONTHLY',
+      icon: 'calendar-month',
+      fullWidth: true,
+    },
+  ];
 
 function scheduleTypeSelector({ value, onChange }: Props) {
   const { colors } = useTheme();

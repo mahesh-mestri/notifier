@@ -8,7 +8,7 @@ import { authStorage } from './storage/authStorage';
 import { store } from '../store';
 import { logout } from '../store/feature/auth/authSlice';
 
-const BASE_URL = 'http://192.168.1.3:8080/api';
+const BASE_URL = 'http://192.168.1.2:8080/api';
 
 const api = axios.create({
   baseURL: BASE_URL,

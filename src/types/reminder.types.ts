@@ -1,27 +1,26 @@
-
 /* ----------------------------------
    Reminder enums and basic types
 ----------------------------------- */
 
 export type ReminderCategory =
-  | 'personal'
-  | 'work'
-  | 'health'
-  | 'other';
+  | 'PERSONAL'
+  | 'WORK'
+  | 'HEALTH'
+  | 'OTHER';
 
 export type ReminderStatus =
-  | 'pending'
-  | 'completed'
-  | 'missed';
+  | 'PENDING'
+  | 'COMPLETED'
+  | 'MISSED';
 
 export type scheduleType =
-  | 'once'
-  | 'interval'
-  | 'daily'
-  | 'weekly'
-  | 'monthly';
+  | 'ONCE'
+  | 'INTERVAL'
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'MONTHLY';
 
-export type IntervalUnit = 'minutes' | 'hours';
+export type IntervalUnit = 'MINUTES' | 'HOURS';
 
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -31,14 +30,14 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 ----------------------------------- */
 
 export interface OnceSchedule {
-  type: 'once';
-  date: string;       // YYYY-MM-DD
-  time: string;       // HH:mm
-  timeZone: string;   // Asia/Kolkata
+  type: 'ONCE';
+  reminderDate: string; // YYYY-MM-DD
+  reminderTime: string; // HH:mm
+  timeZone: string;     // Asia/Kolkata
 }
 
 export interface IntervalSchedule {
-  type: 'interval';
+  type: 'INTERVAL';
   startDate: string;
   intervalValue: number;
   intervalUnit: IntervalUnit;
@@ -49,26 +48,26 @@ export interface IntervalSchedule {
 }
 
 export interface DailySchedule {
-  type: 'daily';
+  type: 'DAILY';
   startDate: string;
-  time: string;
+  reminderTime: string;
   endDate?: string;
   timeZone: string;
 }
 
 export interface WeeklySchedule {
-  type: 'weekly';
+  type: 'WEEKLY';
   startDate: string;
-  time: string;
+  reminderTime: string;
   weekdays: Weekday[];
   endDate?: string;
   timeZone: string;
 }
 
 export interface MonthlySchedule {
-  type: 'monthly';
+  type: 'MONTHLY';
   startDate: string;
-  time: string;
+  reminderTime: string;
   dayOfMonth: number;
   endDate?: string;
   timeZone: string;
@@ -118,10 +117,21 @@ export interface ReminderOccurrence {
 /* ----------------------------------
    API request types
 ----------------------------------- */
+
+export interface CreateReminderRequest {
+  title: string;
+  description?: string;
+  categoryId: ReminderCategory;
+  scheduleType: scheduleType;
+  schedule: ReminderSchedule;
+  notificationEnabled: boolean;
+}
+
 export interface UpdateReminderRequest {
   title?: string;
   description?: string;
   categoryId?: ReminderCategory;
+  scheduleType?: scheduleType;
   schedule?: ReminderSchedule;
   notificationEnabled?: boolean;
   active?: boolean;
@@ -243,6 +253,7 @@ export interface ReminderFormValues {
 /* ----------------------------------
    Form validation errors
 ----------------------------------- */
+
 export type ReminderFormErrors = Partial<
   Record<keyof ReminderFormValues | 'schedule', string>
 >;
@@ -257,11 +268,3 @@ export type ReminderPickerTarget =
   | 'time'
   | 'windowStart'
   | 'windowEnd';
-
-export interface CreateReminderRequest {
-  title: string;
-  description?: string;
-  categoryId: ReminderCategory;
-  schedule: ReminderSchedule;
-  notificationEnabled: boolean;
-}

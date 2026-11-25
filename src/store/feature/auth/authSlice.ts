@@ -43,6 +43,13 @@ export const login = createAsyncThunk<
   },
 );
 
+export const logoutUser = createAsyncThunk<void, void>(
+  'auth/logoutUser',
+  async () => {
+    await authStorage.clear();
+  },
+);
+
 export const signup = createAsyncThunk<
   AuthData,
   SignupPayload,
@@ -125,7 +132,16 @@ export const authSlice = createSlice({
       .addCase(signup.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? 'Signup failed';
-      });
+      })
+
+      // for logout
+      .addCase(logoutUser.fulfilled, state => {
+        state.user = null;
+        state.accessToken = null;
+        state.isAuthenticated = false;
+        state.error = null;
+        state.isLoading = false;
+      })
   },
 });
 

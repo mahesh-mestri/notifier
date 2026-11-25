@@ -1,5 +1,4 @@
-
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useRef } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
@@ -23,11 +22,10 @@ function OneTimeSchedule({ value, onChange }: Props) {
   const { colors } = useTheme();
   const ref = useRef<ReminderDateTimeBottomSheetRef>(null);
 
-
   const handleOpenPicker = (field: ReminderPickerField) => {
     ref.current?.open({
       field,
-      value: field === 'start' ? value.startDate : value.reminderTime,
+      value: field === 'start' ? value.startDate : new Date(),
     });
   };
 
@@ -44,7 +42,7 @@ function OneTimeSchedule({ value, onChange }: Props) {
   };
 
   return (
-    <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'space-between' }}>
+    <View style={styles.row}>
       <FormSection title="Reminder Date" style={styles.w48}>
         <Pressable
           onPress={() => handleOpenPicker('start')}
@@ -100,6 +98,11 @@ function OneTimeSchedule({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
   picker: {
     minHeight: 54,
     borderWidth: 1,
@@ -109,9 +112,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   w48: {
-    width: "48%"
+    width: '48%',
   },
-  m6: { marginLeft: 6 }
+  m6: {
+    marginLeft: 6,
+  },
 });
 
 export default memo(OneTimeSchedule);
