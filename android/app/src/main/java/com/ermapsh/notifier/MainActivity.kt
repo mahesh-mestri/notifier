@@ -1,4 +1,4 @@
-package com.notifier
+package com.ermapsh.notifier
 
 import android.os.Bundle
 import com.facebook.react.ReactActivity

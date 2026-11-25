@@ -1,7 +1,7 @@
 export type DevicePlatform = 'IOS' | 'ANDROID';
 
 export interface RegisterFcmTokenPayload {
-  token: string;
+  fcmToken: string;
   platform: DevicePlatform;
 }
 

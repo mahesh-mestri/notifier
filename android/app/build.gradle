@@ -4,6 +4,7 @@ apply plugin: "com.facebook.react"
 
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: "com.google.firebase.crashlytics"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -80,9 +81,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.notifier"
+    namespace "com.ermapsh.notifier"
     defaultConfig {
-        applicationId "com.notifier"
+        applicationId "com.ermapsh.notifier"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -119,4 +120,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Firebase BoM & Cloud Messaging
+    implementation platform("com.google.firebase:firebase-bom:33.12.0")
+    implementation "com.google.firebase:firebase-messaging"
+    implementation 'com.google.firebase:firebase-analytics'
 }

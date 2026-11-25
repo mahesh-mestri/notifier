@@ -1,3 +1,4 @@
+import { PermissionsAndroid, Platform } from 'react-native';
 import { getApp } from '@react-native-firebase/app';
 import {
   AuthorizationStatus,
@@ -23,6 +24,12 @@ const isAuthorized = (status: FirebaseAuthorizationStatus): boolean =>
 
 export async function checkNotificationPermission(): Promise<boolean> {
   try {
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      return await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+    }
+
     const status = await hasPermission(getMessagingInstance());
     return isAuthorized(status);
   } catch (error) {
@@ -35,6 +42,31 @@ export async function checkNotificationPermission(): Promise<boolean> {
 
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
+    if (Platform.OS === 'android') {
+      if (Platform.Version < 33) {
+        return true;
+      }
+
+      const alreadyGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (alreadyGranted) {
+        return true;
+      }
+
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        {
+          title: 'Notification Permission',
+          message: 'Allow Notifier to send you reminder alerts on time.',
+          buttonPositive: 'Allow',
+          buttonNegative: 'Don’t Allow',
+        },
+      );
+
+      return result === PermissionsAndroid.RESULTS.GRANTED;
+    }
+
     const status = await requestPermission(getMessagingInstance());
     return isAuthorized(status);
   } catch (error) {
@@ -61,22 +93,22 @@ export async function getFcmToken(
 
     const messaging = getMessagingInstance();
 
-    // if (Platform.OS === 'ios') {
-    //   try {
-    //     if (!isDeviceRegisteredForRemoteMessages(messaging)) {
-    //       await registerDeviceForRemoteMessages(messaging);
-    //     }
-    //   } catch (iosRegisterError) {
-    //     // Expected during development on a free Apple Personal Team without APNs capability.
-    //     if (__DEV__) {
-    //       console.info(
-    //         '[Messaging] iOS APNs registration skipped/unavailable in current signing setup:',
-    //         iosRegisterError,
-    //       );
-    //     }
-    //     return null;
-    //   }
-    // }
+    if (Platform.OS === 'ios') {
+      try {
+        if (!isDeviceRegisteredForRemoteMessages(messaging)) {
+          await registerDeviceForRemoteMessages(messaging);
+        }
+      } catch (iosRegisterError) {
+        // Expected during development on a free Apple Personal Team without APNs capability.
+        if (__DEV__) {
+          console.info(
+            '[Messaging] iOS APNs registration skipped/unavailable in current signing setup:',
+            iosRegisterError,
+          );
+        }
+        return null;
+      }
+    }
 
     const token = await getToken(messaging);
     return token || null;

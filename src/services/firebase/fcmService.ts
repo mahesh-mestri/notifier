@@ -4,7 +4,7 @@ import { isIOS } from '../../utils/os';
 
 export const saveFcmTokenApi = async (token: string): Promise<void> => {
     const payload: RegisterFcmTokenPayload = {
-        token,
+        fcmToken: token,
         platform: isIOS ? 'IOS' : 'ANDROID',
     };
 

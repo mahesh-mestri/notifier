@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "485004814161",
+    "project_id": "notify-2ad14",
+    "storage_bucket": "notify-2ad14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485004814161:android:780ee3289d066536775570",
+        "android_client_info": {
+          "package_name": "com.ermapsh.notifier"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2dHIokCPT3enRBMfHmMFqfpke_mBb3nc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

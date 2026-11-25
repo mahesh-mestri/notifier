@@ -88,19 +88,6 @@ function Signin({ navigation }: SigninScreenProps) {
         'success',
         'Login successful',
       );
-
-      try {
-        const fcmToken = await getFcmToken();
-        console.log('FCM token after login:', fcmToken);
-
-        if (fcmToken) {
-          await dispatch(syncFcmToken(fcmToken)).unwrap();
-        }
-      } catch (fcmError) {
-        if (__DEV__) {
-          console.warn('FCM token fetch/sync after login failed:', fcmError);
-        }
-      }
     } catch (error) {
       showToast(
         'Login unsuccessful!',

@@ -12,6 +12,8 @@ import type {
 } from '../../../types/auth.types';
 import { loginUser, signupUser } from '../../../services/auth/authService';
 import { authStorage } from '../../../services/storage/authStorage';
+import { getFcmToken } from '../../../services/firebase/messaging';
+import { syncFcmToken } from '../reminder/fcmSlice';
 
 const initialState: AuthState = {
   user: null,
@@ -27,12 +29,28 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >(
   'auth/login',
-  async (payload, { rejectWithValue }) => {
+  async (payload, { dispatch, rejectWithValue }) => {
     try {
       const response = await loginUser(payload);
       const authData = response.data;
 
       await authStorage.saveAccessToken(authData.accessToken);
+
+      // 2. Fetch & sync FCM token without failing login if sync has an issue
+      try {
+        const fcmToken = await getFcmToken();
+        if (__DEV__) {
+          console.log('[Auth] FCM token after login:', fcmToken);
+        }
+
+        if (fcmToken) {
+          await dispatch(syncFcmToken(fcmToken)).unwrap();
+        }
+      } catch (fcmError) {
+        if (__DEV__) {
+          console.warn('[Auth] FCM token sync failed after login:', fcmError);
+        }
+      }
 
       return authData;
     } catch (error: any) {
